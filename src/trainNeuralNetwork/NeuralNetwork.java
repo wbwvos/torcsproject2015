@@ -3,6 +3,7 @@ package trainNeuralNetwork;
 import org.encog.Encog;
 import org.encog.engine.network.activation.ActivationElliott;
 import org.encog.engine.network.activation.ActivationSigmoid;
+import org.encog.engine.network.activation.ActivationTANH;
 import org.encog.ml.data.*;
 import org.encog.ml.data.basic.BasicMLData;
 import org.encog.ml.data.basic.BasicMLDataSet;
@@ -35,8 +36,8 @@ public class NeuralNetwork {
 		int hiddenLayerNeuronsCount = 100;
 		 
 		network.addLayer(new BasicLayer(null, true, inputdata[0].length));
-		network.addLayer(new BasicLayer(new ActivationElliott(), true, hiddenLayerNeuronsCount));
-		network.addLayer(new BasicLayer(new ActivationElliott(), false, outputdata[0].length));
+		network.addLayer(new BasicLayer(new ActivationTANH(), true, hiddenLayerNeuronsCount));
+		network.addLayer(new BasicLayer(new ActivationTANH(), false, outputdata[0].length));
 		 
 		network.getStructure().finalizeStructure();
 		network.reset();
@@ -45,7 +46,7 @@ public class NeuralNetwork {
 		 
 		final Propagation train = new ResilientPropagation(network, trainingSet);
 		 
-		int epochsCount = 100;
+		int epochsCount = 200;
 		 
 		for(int epoch = 1; epoch <= epochsCount; epoch++){
 			train.iteration();
@@ -58,7 +59,7 @@ public class NeuralNetwork {
 		 
 		double error = network.calculateError(validationSet);
 		
-		//System.out.print("Error:" + error);
+		System.out.print("Error:" + error);
 		double[] classifyDouble = {20.8291,0.551491,200.173,11.7288,21.0026,68.3699,0.360499,0.087496,0.0500069,0.0351949,0.0273127,0.0224547,0.0191879,0.0168629,0.0151433,0.0138375,0.0128289,0.0120427,0.0114294,0.0105954,0.0100575,0.0118036,-1.0,-1.0,-1.0,-1.0,-1.0,0.997989};
 		//,1.0,0.0,-0.9884749846419609
 		MLData classifyData = new BasicMLData(classifyDouble);
