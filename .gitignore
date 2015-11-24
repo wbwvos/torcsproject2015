@@ -49,4 +49,5 @@ bin
 bin/*
 .settings
 .settings/*
+torcs.properties
 >>>>>>> b6cf1ee83a04dbdd70243276d7ad5b91a7826870

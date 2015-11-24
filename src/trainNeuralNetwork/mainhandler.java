@@ -13,7 +13,7 @@ public class mainhandler {
 	
 	public static void main(String args[]){
 		datahandler handler = new datahandler();
-		double[][][] data = handler.readcsv("C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/Aalborg.csv");
+		double[][][] data = handler.readcsv("..\\..\\Self generated training data\\Aalborg.csv");
 		double[][] inputarray =data[0];
 		double[][] outputarray =data[1];
 		//System.out.print(inputarray.length);
@@ -28,7 +28,7 @@ public class mainhandler {
 	
 	public static void serializeNN(NeuralNetwork neuralnetwork){
 		try{
-			FileOutputStream fileOut = new FileOutputStream("C:/Users/Kasper/Documents/GitHub/torcsproject2015/serialized networks/neuralnetwork.ser");
+			FileOutputStream fileOut = new FileOutputStream("..\\..\\serialized networks\\neuralnetwork.ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(neuralnetwork.network);
 	        out.close();
@@ -42,7 +42,7 @@ public class mainhandler {
 	
 	public static BasicNetwork deserializeNN(BasicNetwork neuralnetwork){
 		try{
-	         FileInputStream fileIn = new FileInputStream("C:/Users/Kasper/Documents/GitHub/torcsproject2015/serialized networks/neuralnetwork.ser");
+	         FileInputStream fileIn = new FileInputStream("..\\..\\serialized networks\\neuralnetwork.ser");
 	         ObjectInputStream in = new ObjectInputStream(fileIn);
 	         neuralnetwork = (BasicNetwork) in.readObject();
 	         in.close();

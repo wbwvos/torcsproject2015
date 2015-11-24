@@ -7,7 +7,7 @@ import trainNeuralNetwork.NeuralNetwork;
 
 public class DefaultDriver extends AbstractDriver {
 	
-	trainingdatawriter datawriter = new trainingdatawriter("C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/trainingdata.csv");
+	//trainingdatawriter datawriter = new trainingdatawriter("..\\Self generated training data\\trainingdata.csv");
 
     private NeuralNetwork MyNN;
 
