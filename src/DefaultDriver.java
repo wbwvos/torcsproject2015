@@ -7,33 +7,22 @@ import trainNeuralNetwork.NeuralNetwork;
 
 public class DefaultDriver extends AbstractDriver {
 	
-	trainingdatawriter datawriter = new trainingdatawriter("C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/trainingdata.csv");
+	//trainingdatawriter datawriter = new trainingdatawriter("C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/defaultdriver/trainingdata.csv");
 
     private NeuralNetwork MyNN;
-
+    
     @Override
     public void control(Action action, SensorModel sensors) {
 	double[] values = getValues(sensors);
-	//for(double val : values){
-	//	System.out.print(val + " ");
-	//	
-	//}
 	
 	System.out.print("\n");
 	action.accelerate = values[0];
-	action.brake = 0;
+	action.brake = 0.0;
 	action.steering = values[2];
 	System.out.print(action.accelerate+ " ");
-	System.out.print(action.brake+ " " );
+	System.out.print(values[1]+ " " );
 	System.out.print(action.steering+" ");
-	/*
-	if(values[2]>=0){
-	action.brake = values[2];
-	}
-	else{
-		action.brake = 0;
-	}
-	*/
+
     }
     
     public void loadGenome(IGenome genome) {

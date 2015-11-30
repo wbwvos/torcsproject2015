@@ -73,7 +73,7 @@ public class datahandler {
 			}
 		}
 
-		System.out.println("Done");
+		//System.out.println(csvFile);
 		double[][][] data = new double[2][][];
 		data[0]= inputarray;
 		data[1]= outputarray;

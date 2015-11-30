@@ -1,39 +1,66 @@
 package trainNeuralNetwork;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.encog.neural.networks.BasicNetwork;
 
 public class mainhandler {
 		
+	NeuralNetwork NN;
 	
 	public static void main(String args[]){
-		datahandler handler = new datahandler();
-		double[][][] data = handler.readcsv("C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/Aalborg.csv");
-		double[][] inputarray =data[0];
-		double[][] outputarray =data[1];
-		//System.out.print(inputarray.length);
-		//NeuralNetwork neuralnetwork = new NeuralNetwork(inputarray, outputarray);
-		//serializeNN(neuralnetwork);
+		String validationcsv = "C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/Defaultdriver/Forza.csv";
 		
-		//NeuralNetwork neuralnetwork = null;
-		//neuralnetwork = deserializeNN(neuralnetwork);
-		//neuralnetwork.useNN();
-				
+		datahandler handler = new datahandler();
+		
+		double[][][] validationdata = handler.readcsv(validationcsv);
+		double[][] inputvalidation = validationdata[0];
+		double[][] outputvalidation = validationdata[1];
+		
+
+		NeuralNetwork NN = new NeuralNetwork(inputvalidation, outputvalidation);
+		
+		double[][][] data;
+		double[][] input;
+		double[][] output;
+		
+		int epoch = 0;
+		
+		File dir = new File("C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/Defaultdriver/");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			while(epoch < 1){
+				for(File files: directoryListing){
+					data = handler.readcsv(validationcsv);
+					input = data[0];
+					output = data[1];
+					NN.trainInitializedNN(input, output, inputvalidation, outputvalidation);
+				}
+				epoch++;
+			}
+		} 
+		else if(!dir.isDirectory()){
+		    System.out.print("file path does not lead to a directory");
+		    
+		}
+		serializeNN(NN.network);	
 	}
 	
-	public static void serializeNN(NeuralNetwork neuralnetwork){
+	public static void serializeNN(BasicNetwork neuralnetwork){
 		try{
-			FileOutputStream fileOut = new FileOutputStream("C:/Users/Kasper/Documents/GitHub/torcsproject2015/serialized networks/neuralnetwork.ser");
+			FileOutputStream fileOut = new FileOutputStream("C:/Users/Kasper/Documents/Master/Compuational Intelligence/serialized neural networks/DefaultDriver2.ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(neuralnetwork.network);
+			out.writeObject(neuralnetwork);
 	        out.close();
 	        fileOut.close();
-	        System.out.printf("Serialized data is saved in neuralnetwork.ser");
+	        System.out.printf("Serialized data is saved in DefaultDriver2.ser");
 		}
 		catch(IOException i){
 			i.printStackTrace();
@@ -60,5 +87,5 @@ public class mainhandler {
 	         return null;
 	      }
 	    
-	}
+	}	
 }
