@@ -17,6 +17,8 @@ public class DefaultDriverGenome implements IGenome {
     private NeuralNetwork speedNN = new NeuralNetwork(deserializeNN("speedNN.ser"));
     private NeuralNetwork positionNN = new NeuralNetwork(deserializeNN("positionNN.ser"));
     
+    private NeuralNetwork NeatNN = new NeuralNetwork(deserializeNN("NEATDriver.ser"));
+    
     public NeuralNetwork getMyNN() {
         return myNN;
     }
@@ -27,6 +29,10 @@ public class DefaultDriverGenome implements IGenome {
     
     public NeuralNetwork getPositionNN() {
     	return this.positionNN;
+    }
+    
+    public NeuralNetwork getNeatNN() {
+    	return this.NeatNN;
     }
     
     public static BasicNetwork deserializeNN(String network){

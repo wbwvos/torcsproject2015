@@ -18,6 +18,7 @@ public class mainhandler {
 	public static void main(String args[]){
 		trainDirectNetwork();
 //	    trainIndirectNetworks();
+//		trainNEATNetwork();
 				
 	}
 
@@ -128,5 +129,39 @@ public class mainhandler {
 		positionNN.setActivation(new ActivationLinear());
 		positionNN.train(inputs, transposedOutputs[1], 100);
 		serializeNN(positionNN.network, "positionNN.ser");
+	}
+	
+	private static void trainNEATNetwork() {
+		String validationcsv = "data/Defaultdriver/Forza.csv";
+		datahandler handler = new datahandler();
+		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 28, 3);
+		double[][] inputvalidation = transformListsToArrays(validationdata.get(0));
+		double[][] outputvalidation = transformListsToArrays(validationdata.get(1));
+
+		NeuralNetwork NN = new NeuralNetwork(inputvalidation, outputvalidation);
+		
+		double[][] input;
+		double[][] output;
+		
+		int epoch = 0;
+		
+		File dir = new File("data/Defaultdriver/");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			while(epoch < 1){
+				for(File files : directoryListing){
+					List<List<List<Double>>> data = handler.readCSV(files.getAbsolutePath(), 28, 3);
+					input = transformListsToArrays(data.get(0));
+					output = transformListsToArrays(data.get(1));
+					NN.trainNEAT(input, output, inputvalidation, outputvalidation);
+				}
+				epoch++;
+			}
+		} 
+		else if(!dir.isDirectory()){
+		    System.out.print("file path does not lead to a directory");
+		    
+		}
+		serializeNN(NN.network, "NEATDriver.ser");
 	}
 }
