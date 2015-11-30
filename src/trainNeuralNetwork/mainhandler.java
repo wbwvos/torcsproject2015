@@ -9,7 +9,6 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 
 import org.encog.engine.network.activation.ActivationLinear;
-import org.encog.engine.network.activation.ActivationTANH;
 import org.encog.neural.networks.BasicNetwork;
 
 public class mainhandler {
@@ -35,7 +34,7 @@ public class mainhandler {
 			i.printStackTrace();
 		}
 	}
-	
+		
 	public static BasicNetwork deserializeNN(BasicNetwork neuralnetwork){
 		try{
 			FileInputStream fileIn = new FileInputStream("serialized networks/neuralnetworkTrial.ser");
@@ -80,7 +79,6 @@ public class mainhandler {
 		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 28, 3);
 		double[][] inputvalidation = transformListsToArrays(validationdata.get(0));
 		double[][] outputvalidation = transformListsToArrays(validationdata.get(1));
-		
 
 		NeuralNetwork NN = new NeuralNetwork(inputvalidation, outputvalidation);
 		
@@ -108,7 +106,7 @@ public class mainhandler {
 		}
 		serializeNN(NN.network, "DefaultDriver3.ser");
 	}
-	
+
 	private static void trainIndirectNetworks() {
 		datahandler handler = new datahandler();
 		List<List<List<Double>>> data = handler.readCSV("Self generated training data/Spring1new.csv", 28, 2);
@@ -119,6 +117,7 @@ public class mainhandler {
 			for (int col = 0; col < transposedOutputs[0].length; ++col) {
 				transposedOutputs[row][col] = outputs[col][row];
 			}
+
 		}
 		NeuralNetwork speedNN = new NeuralNetwork();
 		speedNN.setActivation(new ActivationLinear());

@@ -64,6 +64,7 @@ public class datahandler {
 					e.printStackTrace();
 				}
 			}
+
 		}
 
 		this.normalizeInputs(input, mins, maxes);
