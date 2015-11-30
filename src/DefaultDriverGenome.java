@@ -18,8 +18,7 @@ public class DefaultDriverGenome implements IGenome {
     
     public static BasicNetwork deserializeNN(BasicNetwork neuralnetwork){
 		try{
-			 System.out.println(System.getProperty("user.dir"));
-	         FileInputStream fileIn = new FileInputStream("serialized networks\\neuralnetwork.ser");
+	         FileInputStream fileIn = new FileInputStream("serialized networks/neuralnetwork.ser");
 	         ObjectInputStream in = new ObjectInputStream(fileIn);
 	         neuralnetwork = (BasicNetwork) in.readObject();
 	         in.close();

@@ -18,14 +18,14 @@ public class NeuralNetwork{
 	BasicNetwork network;
 	
 	public NeuralNetwork(double[][] inputdata, double[][] outputdata){
-		trainNN(inputdata, outputdata);
+		initNN(inputdata, outputdata);
 	}
 	
 	public NeuralNetwork(BasicNetwork SerializedNetwork){
 		network = SerializedNetwork;
 	}
 	
-	public void trainNN(double[][] inputdata, double[][] outputdata){ 
+	public void initNN(double[][] inputdata, double[][] outputdata){ 
 		
 		// read datasets
 		
@@ -50,22 +50,22 @@ public class NeuralNetwork{
 		 
 		// train the neural network
 		 
-		final Propagation train = new ResilientPropagation(network, trainingSet);
+		//final Propagation train = new ResilientPropagation(network, trainingSet);
 		 
-		int epochsCount = 200;
+		//int epochsCount = 200;
 		 
-		for(int epoch = 1; epoch <= epochsCount; epoch++){
-			train.iteration();
-			System.out.print(epoch + ": " + network.calculateError(validationSet) + "\n");
-		}
+		//for(int epoch = 1; epoch <= epochsCount; epoch++){
+		//	train.iteration();
+		//	System.out.print(epoch + ": " + network.calculateError(validationSet) + "\n");
+		//}
 		 
-		train.finishTraining();
+		//train.finishTraining();
 		 
 		// calculate error on validation set
 		 
-		double error = network.calculateError(validationSet);
+		//double error = network.calculateError(validationSet);
 		
-		System.out.print("Error:" + error);
+		//System.out.print("Error:" + error);
 		//double[] classifyDouble = {20.8291,0.551491,200.173,11.7288,21.0026,68.3699,0.360499,0.087496,0.0500069,0.0351949,0.0273127,0.0224547,0.0191879,0.0168629,0.0151433,0.0138375,0.0128289,0.0120427,0.0114294,0.0105954,0.0100575,0.0118036,-1.0,-1.0,-1.0,-1.0,-1.0,0.997989};
 		//,1.0,0.0,-0.9884749846419609
 		//MLData classifyData = new BasicMLData(classifyDouble);
@@ -77,7 +77,34 @@ public class NeuralNetwork{
 		//writeObject(network);
 	}
 	
-	
+	public void trainInitializedNN(double[][] inputtraining, double[][] outputtraining, double[][] inputvalidation, double[][] outputvalidation){
+		
+		MLDataSet trainingSet = new BasicMLDataSet(inputtraining, outputtraining);
+		
+		MLDataSet validationSet = new BasicMLDataSet(inputvalidation, outputvalidation);
+		
+		final Propagation train = new ResilientPropagation(network, trainingSet);
+		 
+		int epochsCount = 200;
+		 
+		for(int epoch = 1; epoch <= epochsCount; epoch++){
+			train.iteration();
+		}
+		 
+		train.finishTraining();
+		 
+		// calculate error on validation set
+		 
+		double error = network.calculateError(validationSet);
+		
+		System.out.println("Error:" + error);
+	}
+	/*
+	public void testNN(double[][] outputdata){
+		MLDataSet validationSet = new BasicMLDataSet(inputdata, outputdata);
+		System.out.print(epoch + ": " + network.calculateError(validationSet) + "\n");
+	}
+	*/
 	public double[] useNN(SensorModel sensors){
 		double[] input = transformInput(sensors);
 		//double[] classifyDouble = {20.8291,0.551491,200.173,11.7288,21.0026,68.3699,0.360499,0.087496,0.0500069,0.0351949,0.0273127,0.0224547,0.0191879,0.0168629,0.0151433,0.0138375,0.0128289,0.0120427,0.0114294,0.0105954,0.0100575,0.0118036,-1.0,-1.0,-1.0,-1.0,-1.0,0.997989};
