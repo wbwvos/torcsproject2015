@@ -1,5 +1,3 @@
-import org.encog.neural.networks.BasicNetwork;
-
 import cicontest.algorithm.abstracts.AbstractDriver;
 import cicontest.torcs.client.Action;
 import cicontest.torcs.client.SensorModel;
@@ -9,7 +7,7 @@ import trainNeuralNetwork.NeuralNetwork;
 
 public class DefaultDriver extends AbstractDriver {
 	
-	//trainingdatawriter datawriter = new trainingdatawriter("..\\Self generated training data\\trainingdata.csv");
+//	trainingdatawriter datawriter = new trainingdatawriter("Self generated training data/trainingdata.csv");
 
     private NeuralNetwork MyNN;
     private NeuralNetwork speedNN;
