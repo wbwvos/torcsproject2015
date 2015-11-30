@@ -1,3 +1,5 @@
+import org.encog.neural.networks.BasicNetwork;
+
 import cicontest.algorithm.abstracts.AbstractDriver;
 import cicontest.torcs.client.Action;
 import cicontest.torcs.client.SensorModel;
@@ -10,42 +12,30 @@ public class DefaultDriver extends AbstractDriver {
 	//trainingdatawriter datawriter = new trainingdatawriter("..\\Self generated training data\\trainingdata.csv");
 
     private NeuralNetwork MyNN;
+    private NeuralNetwork speedNN;
+    private NeuralNetwork positionNN;
+    private double targetSpeed;
+    private double targetPosition;
 
     @Override
     public void control(Action action, SensorModel sensors) {
-	double[] values = getValues(sensors);
-	//for(double val : values){
-	//	System.out.print(val + " ");
-	//	
-	//}
-	
-	System.out.print("\n");
-	action.accelerate = values[0];
-	action.brake = 0;
-	action.steering = values[2];
-	System.out.print(action.accelerate+ " ");
-	System.out.print(action.brake+ " " );
-	System.out.print(action.steering+" ");
-	/*
-	if(values[2]>=0){
-	action.brake = values[2];
-	}
-	else{
-		action.brake = 0;
-	}
-	*/
+    	this.directControl(action, sensors);
+//    	this.indirectControl(action, sensors);
     }
     
-    public void loadGenome(IGenome genome) {
-        if (genome instanceof DefaultDriverGenome) {
-            DefaultDriverGenome MyGenome = (DefaultDriverGenome) genome;
-            MyNN = MyGenome.getMyNN();
-        } else {
-            System.err.println("Invalid Genome assigned");
-        }
+    @Override
+	public void loadGenome(IGenome genome) {
+    	if (genome instanceof DefaultDriverGenome) {
+    		DefaultDriverGenome MyGenome = (DefaultDriverGenome) genome;
+    		MyNN = MyGenome.getMyNN();
+    		this.speedNN = MyGenome.getSpeedNN();
+    		this.positionNN = MyGenome.getPositionNN();
+    	} else {
+    		System.err.println("Invalid Genome assigned");
+    	}
     }
 
-    public double[] getValues(SensorModel sensors){     
+    private double[] getValues(SensorModel sensors){     
     	return MyNN.useNN(sensors);
     }
     
@@ -81,14 +71,63 @@ public class DefaultDriver extends AbstractDriver {
     
     
 	@Override
-	public double getAcceleration(SensorModel arg0) {
-		// TODO Auto-generated method stub
-		return 0;
+	public double getAcceleration(SensorModel sensors) {
+		double acceleration = 0;
+		double speedDiff = this.targetSpeed - sensors.getSpeed();
+		if (speedDiff > 20) {
+			acceleration = 1;
+		} else if (speedDiff > 0) {
+			acceleration = speedDiff / 20;
+		}
+		return acceleration;
+	}
+	
+	public double getBrake(SensorModel sensors) {
+		double brake = 0;
+		double speedDiff = this.targetSpeed - sensors.getSpeed();
+		if (speedDiff < -20) {
+			brake = 1;
+		} else if (speedDiff < 0) {
+			brake = - speedDiff / 20;
+		}
+		return brake;
 	}
 
 	@Override
-	public double getSteering(SensorModel arg0) {
-		// TODO Auto-generated method stub
-		return 0;
+	public double getSteering(SensorModel sensors) {
+		double steeringReactiveness = 0.1;
+		double steerLock = 10;
+	    double angle = sensors.getAngleToTrackAxis();
+		double positionDiff = this.targetPosition - sensors.getTrackPosition();
+		angle += positionDiff * steeringReactiveness;
+		return angle / steerLock;
+	}
+	
+	private void directControl(Action action, SensorModel sensors) {
+		double[] values = getValues(sensors);
+
+    	action.accelerate = values[0];
+    	action.brake = 0;
+    	action.steering = values[2];
+    	System.out.print(action.accelerate + " ");
+    	System.out.print(action.brake + " " );
+    	System.out.print(action.steering +"\n");
+	}
+	
+	private void indirectControl(Action action, SensorModel sensors) {
+		this.targetSpeed = Math.abs(this.speedNN.predict(sensors));
+		this.targetPosition = this.positionNN.predict(sensors);
+
+		System.out.println("Current Speed: " + sensors.getSpeed());
+		System.out.println("Target Speed: " + this.targetSpeed);
+		System.out.println("Current Pos: " + sensors.getTrackPosition());
+		System.out.println("Target Pos: " + this.targetPosition);
+		
+    	action.accelerate = this.getAcceleration(sensors);
+    	action.brake = this.getBrake(sensors);
+    	action.steering = this.getSteering(sensors);
+    	System.out.print(action.accelerate + " ");
+    	System.out.print(action.brake + " " );
+    	System.out.print(action.steering +"\n");
 	}
 }

@@ -11,17 +11,29 @@ import trainNeuralNetwork.NeuralNetwork;
 
 public class DefaultDriverGenome implements IGenome {
     private static final long serialVersionUID = 6534186543165341653L;
-    private NeuralNetwork myNN = new NeuralNetwork(deserializeNN(null));
+    
+    private NeuralNetwork myNN = new NeuralNetwork(deserializeNN("neuralnetwork.ser"));
+    
+    private NeuralNetwork speedNN = new NeuralNetwork(deserializeNN("speedNN.ser"));
+    private NeuralNetwork positionNN = new NeuralNetwork(deserializeNN("positionNN.ser"));
+    
     public NeuralNetwork getMyNN() {
         return myNN;
     }
     
-    public static BasicNetwork deserializeNN(BasicNetwork neuralnetwork){
+    public NeuralNetwork getSpeedNN() {
+    	return this.speedNN;
+    }
+    
+    public NeuralNetwork getPositionNN() {
+    	return this.positionNN;
+    }
+    
+    public static BasicNetwork deserializeNN(String network){
 		try{
-			 System.out.println(System.getProperty("user.dir"));
-	         FileInputStream fileIn = new FileInputStream("serialized networks\\neuralnetwork.ser");
+			 FileInputStream fileIn = new FileInputStream("serialized networks/" + network);
 	         ObjectInputStream in = new ObjectInputStream(fileIn);
-	         neuralnetwork = (BasicNetwork) in.readObject();
+	         BasicNetwork neuralnetwork = (BasicNetwork) in.readObject();
 	         in.close();
 	         fileIn.close();
 	         System.out.println("Deserialized Neuralnetwork");
