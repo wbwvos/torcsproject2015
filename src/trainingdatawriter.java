@@ -85,7 +85,7 @@ public class trainingdatawriter {
 					
 			    //generate whatever data you want
 					
-			    //writer.flush();
+			    writer.flush();
 			    //writer.close();
 			}
 			catch(IOException e)

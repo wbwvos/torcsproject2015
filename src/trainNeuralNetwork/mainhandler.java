@@ -14,10 +14,11 @@ public class mainhandler {
 	NeuralNetwork NN;
 	
 	public static void main(String args[]){
-		String validationcsv = "C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/Defaultdriver/Forza.csv";
+		
+		String validationcsv = "data/Defaultdriver/Forza.csv";
 		
 		datahandler handler = new datahandler();
-		double[][][] data = handler.readcsv("Self generated training data/Aalborg.csv");
+		//double[][][] data = handler.readcsv("Self generated training data/Aalborg.csv");
 //		double[][] inputarray =data[0];
 //		double[][] outputarray =data[1];
 		//System.out.print(inputarray.length);
@@ -36,12 +37,12 @@ public class mainhandler {
 		
 		int epoch = 0;
 		
-		File dir = new File("C:/Users/Kasper/Documents/Master/Compuational Intelligence/Self generated training data/Defaultdriver/");
+		File dir = new File("data/Defaultdriver");
 		File[] directoryListing = dir.listFiles();
 		if (directoryListing != null) {
 			while(epoch < 1){
 				for(File files : directoryListing){
-					data = handler.readcsv(files.getAbsolutePath());
+					double[][][] data = handler.readcsv(files.getAbsolutePath());
 					input = data[0];
 					output = data[1];
 					NN.trainInitializedNN(input, output, inputvalidation, outputvalidation);
@@ -58,7 +59,7 @@ public class mainhandler {
 	
 	public static void serializeNN(BasicNetwork neuralnetwork){
 		try{
-			FileOutputStream fileOut = new FileOutputStream("serialized networks/DefaultDriver2.ser");
+			FileOutputStream fileOut = new FileOutputStream("serialized networks/DefaultDriver3.ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(neuralnetwork);
 	        out.close();
