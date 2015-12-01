@@ -122,12 +122,11 @@ public class DefaultDriver extends AbstractDriver {
 	private void NEATControl(Action action, SensorModel sensors) {
 		double[] values = getNEATValues(sensors);
 
-    	if(sensors.getSpeed() < 60){
-    		action.accelerate = values[0]/2;
+    	if(values[1] > values[0]){
+			action.accelerate = values[0];
     	}else{
-        	action.brake = values[1]/2;	
-    	}
-
+        	action.brake = values[1];
+		}
     	action.steering = values[2];
     	System.out.print(action.accelerate + " ");
     	System.out.print(action.brake + " " );
