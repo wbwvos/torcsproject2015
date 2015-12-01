@@ -3,19 +3,24 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
-import org.encog.neural.networks.BasicNetwork;
-
 import cicontest.torcs.genome.IGenome;
 //import trainNeuralNetwork.NeuralNetwork;
 import trainNeuralNetwork.NeuralNetwork;
 
 public class DefaultDriverGenome implements IGenome {
+	
     private static final long serialVersionUID = 6534186543165341653L;
     
-    private NeuralNetwork myNN = new NeuralNetwork(deserializeNN("neuralnetwork.ser"));
+    private NeuralNetwork myNN;;
     
-    private NeuralNetwork speedNN = new NeuralNetwork(deserializeNN("speedNN.ser"));
-    private NeuralNetwork positionNN = new NeuralNetwork(deserializeNN("positionNN.ser"));
+    private NeuralNetwork speedNN;
+    private NeuralNetwork positionNN;
+    
+    public DefaultDriverGenome() {
+    	this.myNN = deserializeNN("DefaultDriver3.ser");
+        this.speedNN = deserializeNN("speedNN.ser");
+        this.positionNN = deserializeNN("positionNN.ser");
+    }
     
     public NeuralNetwork getMyNN() {
         return myNN;
@@ -29,11 +34,11 @@ public class DefaultDriverGenome implements IGenome {
     	return this.positionNN;
     }
     
-    public static BasicNetwork deserializeNN(String network){
+    public static NeuralNetwork deserializeNN(String network){
 		try{
 			 FileInputStream fileIn = new FileInputStream("serialized networks/" + network);
 	         ObjectInputStream in = new ObjectInputStream(fileIn);
-	         BasicNetwork neuralnetwork = (BasicNetwork) in.readObject();
+	         NeuralNetwork neuralnetwork = (NeuralNetwork) in.readObject();
 	         in.close();
 	         fileIn.close();
 	         System.out.println("Deserialized Neuralnetwork");

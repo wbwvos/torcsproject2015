@@ -2,6 +2,8 @@ package trainNeuralNetwork;
 
 import cicontest.torcs.client.SensorModel;
 
+import java.io.Serializable;
+
 import org.encog.*;
 import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationTANH;
@@ -15,10 +17,18 @@ import org.encog.neural.networks.training.propagation.Propagation;
 import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
 
 
-public class NeuralNetwork{
+public class NeuralNetwork implements Serializable {
 	
-	BasicNetwork network;
+	/**
+	 * default serialVersionID
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	private BasicNetwork network;
 	private ActivationFunction activation;
+	
+	private double[] mins;
+	private double[] maxes;
 	
 	public NeuralNetwork() {
 		this.network = new BasicNetwork();
@@ -34,6 +44,18 @@ public class NeuralNetwork{
 	
 	public void setActivation(ActivationFunction activation) {
 		this.activation = activation;
+	}
+	
+	public BasicNetwork getNetwork() {
+		return this.network;
+	}
+	
+	public void setMins(double[] mins) {
+		this.mins = mins;
+	}
+	
+	public void setMaxes(double[] maxes) {
+		this.maxes = maxes;
 	}
 	
 	public void initNN(double[][] inputdata, double[][] outputdata){ 
@@ -133,7 +155,14 @@ public class NeuralNetwork{
 		System.out.println("Error:" + error);
 	}
 	
-	public void train(double[][] inputs, double[] outputs, int epochsCount){ 
+	public void train(double[][] inputs, double[] outputs, int epochsCount, boolean hiddenLayer){ 
+		
+//		for (int row = 0; row < inputs.length; ++row) {
+//			for (int col = 0; col < inputs[0].length; ++col) {
+//				System.out.print(inputs[row][col] + ',');
+//			}
+//			System.out.println();
+//		}
 		
 		double[][] ideal = new double[outputs.length][1];
 		for (int row = 0; row < ideal.length; ++row) {
@@ -147,10 +176,12 @@ public class NeuralNetwork{
 		// configure the neural networks
 		network = new BasicNetwork(); 
 		 
-//		int hiddenLayerNeuronsCount = 100;
+		int hiddenLayerNeuronsCount = 56;
 		 
 		network.addLayer(new BasicLayer(null, true, inputs[0].length));
-//		network.addLayer(new BasicLayer(this.activation, true, hiddenLayerNeuronsCount));
+		if (hiddenLayer) {
+			network.addLayer(new BasicLayer(this.activation, true, hiddenLayerNeuronsCount));
+		}
 		network.addLayer(new BasicLayer(this.activation, false, ideal[0].length));
 		 
 		network.getStructure().finalizeStructure();
@@ -197,6 +228,9 @@ public class NeuralNetwork{
 	
 	public double predict(SensorModel sensors) {
 		double[] input = transformInput(sensors);
+		//ignore speed
+		input[0] = 0;
+		datahandler.normalize(input, this.mins, this.maxes);
 		MLData data = new BasicMLData(input);
 		MLData output = network.compute(data);
 		Encog.getInstance().shutdown();

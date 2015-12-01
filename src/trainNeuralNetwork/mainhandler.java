@@ -18,10 +18,9 @@ public class mainhandler {
 	public static void main(String args[]){
 		trainDirectNetwork();
 //	    trainIndirectNetworks();
-				
 	}
 
-	public static void serializeNN(BasicNetwork neuralnetwork, String fileName){
+	public static void serializeNN(NeuralNetwork neuralnetwork, String fileName){
 		try{
 			FileOutputStream fileOut = new FileOutputStream("serialized networks/" + fileName);
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
@@ -76,7 +75,7 @@ public class mainhandler {
 	private static void trainDirectNetwork() {
 		String validationcsv = "data/Defaultdriver/Forza.csv";
 		datahandler handler = new datahandler();
-		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 28, 3);
+		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 28, 3, false);
 		double[][] inputvalidation = transformListsToArrays(validationdata.get(0));
 		double[][] outputvalidation = transformListsToArrays(validationdata.get(1));
 
@@ -92,7 +91,7 @@ public class mainhandler {
 		if (directoryListing != null) {
 			while(epoch < 1){
 				for(File files : directoryListing){
-					List<List<List<Double>>> data = handler.readCSV(files.getAbsolutePath(), 28, 3);
+					List<List<List<Double>>> data = handler.readCSV(files.getAbsolutePath(), 28, 3, false);
 					input = transformListsToArrays(data.get(0));
 					output = transformListsToArrays(data.get(1));
 					NN.trainInitializedNN(input, output, inputvalidation, outputvalidation);
@@ -104,12 +103,12 @@ public class mainhandler {
 		    System.out.print("file path does not lead to a directory");
 		    
 		}
-		serializeNN(NN.network, "DefaultDriver3.ser");
+		serializeNN(NN, "DefaultDriver3.ser");
 	}
 
 	private static void trainIndirectNetworks() {
 		datahandler handler = new datahandler();
-		List<List<List<Double>>> data = handler.readCSV("Self generated training data/Spring1new.csv", 28, 2);
+		List<List<List<Double>>> data = handler.readCSV("data/SimpleDriver/AalborgAlpine12Brondehachnew.csv", 28, 2, true);
 		double[][] inputs = transformListsToArrays(data.get(0));
 		double[][] outputs = transformListsToArrays(data.get(1));
 		double[][] transposedOutputs = new double[outputs[0].length][outputs.length];
@@ -119,14 +118,22 @@ public class mainhandler {
 			}
 
 		}
+		//ignore speed
+		for (int row = 0; row < inputs.length; ++row) {
+			inputs[row][0] = 0;
+		}
 		NeuralNetwork speedNN = new NeuralNetwork();
 		speedNN.setActivation(new ActivationLinear());
-		speedNN.train(inputs, transposedOutputs[0], 200);
-		serializeNN(speedNN.network, "speedNN.ser");
+		speedNN.setMins(handler.getMins());
+		speedNN.setMaxes(handler.getMaxes());
+		speedNN.train(inputs, transposedOutputs[0], 300, true);
+		serializeNN(speedNN, "speedNN.ser");
 		
 		NeuralNetwork positionNN = new NeuralNetwork();
 		positionNN.setActivation(new ActivationLinear());
-		positionNN.train(inputs, transposedOutputs[1], 100);
-		serializeNN(positionNN.network, "positionNN.ser");
+		positionNN.setMins(handler.getMins());
+		positionNN.setMaxes(handler.getMaxes());
+		positionNN.train(inputs, transposedOutputs[1], 300, false);
+		serializeNN(positionNN, "positionNN.ser");
 	}
 }
