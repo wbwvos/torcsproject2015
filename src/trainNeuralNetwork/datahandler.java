@@ -10,15 +10,18 @@ import java.util.List;
 
 public class datahandler {
 	
-	public List<List<List<Double>>> readCSV(String csvFile, int inputsCount, int outputsCount){
+	private double[] mins;
+	private double[] maxes;
+	
+	public List<List<List<Double>>> readCSV(String csvFile, int inputsCount, int outputsCount, boolean normalizeInputs){
 		BufferedReader br = null;
 		String line = "";
 		String separator = ",";
 		
 		List<List<Double>> input = new LinkedList<List<Double>>();
 		List<List<Double>> output = new LinkedList<List<Double>>();
-		double[] mins = new double[inputsCount];
-		double[] maxes = new double[inputsCount];
+		this.mins = new double[inputsCount];
+		this.maxes = new double[inputsCount];
 		
 		try {
 						br = new BufferedReader(new FileReader(csvFile));
@@ -34,11 +37,11 @@ public class datahandler {
 					if(i < inputsCount){
 						double value = values[i].isEmpty() ? 0.0 : Double.parseDouble(values[i]);
 						currentInput.add(value);
-						if (mins[i] > value) {
-							mins[i] = value;
+						if (this.mins[i] > value) {
+							this.mins[i] = value;
 						}
-						if (maxes[i] < value) {
-							maxes[i] = value;
+						if (this.maxes[i] < value) {
+							this.maxes[i] = value;
 						}
 					}
 					else{
@@ -67,7 +70,9 @@ public class datahandler {
 
 		}
 
-		this.normalizeInputs(input, mins, maxes);
+		if (normalizeInputs) {
+			this.normalizeInputs(input, this.mins, this.maxes);
+		}
 		
 		System.out.println("Done");
 		List<List<List<Double>>> data = new ArrayList<List<List<Double>>>(2);
@@ -76,12 +81,26 @@ public class datahandler {
 		return data;
 	}
 	
+	public double[] getMins() {
+		return this.mins;
+	}
+	
+	public double[] getMaxes() {
+		return this.maxes;
+	}
+	
 	private void normalizeInputs(List<List<Double>> inputs, double[] mins, double[] maxes) {
 		for (List<Double> input : inputs) {
 			for (int i = 0; i < input.size(); ++i) {
 				double scaledInput = datahandler.scale(input.get(i), mins[i], maxes[i]);
 				input.set(i, scaledInput);
 			}
+		}
+	}
+	
+	public static void normalize(double[] inputs, double[] mins, double[] maxes) {
+		for (int i = 0; i < inputs.length; ++i) {
+			inputs[i] = datahandler.scale(inputs[i], mins[i], maxes[i]);
 		}
 	}
 	

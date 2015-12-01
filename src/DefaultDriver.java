@@ -15,7 +15,7 @@ public class DefaultDriver extends AbstractDriver {
     private NeuralNetwork NeatNN;
     private double targetSpeed;
     private double targetPosition;
-
+    
     @Override
     public void control(Action action, SensorModel sensors) {
     	this.directControl(action, sensors);
@@ -84,7 +84,7 @@ public class DefaultDriver extends AbstractDriver {
 		} else if (speedDiff > 0) {
 			acceleration = speedDiff / 20;
 		}
-		return acceleration;
+		return acceleration > 1 ? 1 : acceleration;
 	}
 	
 	public double getBrake(SensorModel sensors) {
@@ -95,27 +95,37 @@ public class DefaultDriver extends AbstractDriver {
 		} else if (speedDiff < 0) {
 			brake = - speedDiff / 20;
 		}
-		return brake;
+		return brake < -1 ? -1 : brake;
 	}
 
 	@Override
 	public double getSteering(SensorModel sensors) {
-		double steeringReactiveness = 0.1;
-		double steerLock = 10;
+		double steeringReactiveness = 20;
+		double steerLock = 2;
 	    double angle = sensors.getAngleToTrackAxis();
 		double positionDiff = this.targetPosition - sensors.getTrackPosition();
 		angle += positionDiff * steeringReactiveness;
-		return angle / steerLock;
+		double steering = angle/steerLock;
+		if (steering < -1) { 
+			return -1;
+		}
+		if (steering > 1) {
+			return 1;
+		}
+		return steering;
 	}
 	
 	private void directControl(Action action, SensorModel sensors) {
 		double[] values = getValues(sensors);
 
-    	action.accelerate = values[0];
+		boolean smooth = Math.abs(values[2]) < 0.15;
+    	action.accelerate = smooth && (0.4 > values[0]) ? 0.4 : values[0];
     	action.brake = 0;
-    	action.steering = values[2];
+    	action.steering = smooth ? 0 : values[2];
+    	
     	System.out.print(action.accelerate + " ");
-    	System.out.print(action.brake + " " );
+//    	System.out.print(action.brake + " " );
+    	System.out.print(values[1] + " " );
     	System.out.print(action.steering +"\n");
 	}
 	
@@ -136,15 +146,22 @@ public class DefaultDriver extends AbstractDriver {
 	private void indirectControl(Action action, SensorModel sensors) {
 		this.targetSpeed = Math.abs(this.speedNN.predict(sensors));
 		this.targetPosition = this.positionNN.predict(sensors);
+		System.out.println(this.targetSpeed);
+		double minSpeed = this.targetSpeed; //50;
+		if (this.targetSpeed < minSpeed) {
+			this.targetSpeed = minSpeed;
+		}
 
 		System.out.println("Current Speed: " + sensors.getSpeed());
 		System.out.println("Target Speed: " + this.targetSpeed);
 		System.out.println("Current Pos: " + sensors.getTrackPosition());
 		System.out.println("Target Pos: " + this.targetPosition);
 		
-    	action.accelerate = this.getAcceleration(sensors);
+		double steering = this.getSteering(sensors);
+		boolean smooth = Math.abs(steering) < 0.15;
+		action.accelerate = this.getAcceleration(sensors);
     	action.brake = this.getBrake(sensors);
-    	action.steering = this.getSteering(sensors);
+    	action.steering = smooth ? 0 : steering;
     	System.out.print(action.accelerate + " ");
     	System.out.print(action.brake + " " );
     	System.out.print(action.steering +"\n");
