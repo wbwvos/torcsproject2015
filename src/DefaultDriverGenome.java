@@ -22,6 +22,8 @@ public class DefaultDriverGenome implements IGenome {
         this.positionNN = deserializeNN("positionNN.ser");
     }
     
+    private NeuralNetwork NeatNN = deserializeNN("NEATDriver.ser");
+    
     public NeuralNetwork getMyNN() {
         return myNN;
     }
@@ -34,6 +36,10 @@ public class DefaultDriverGenome implements IGenome {
     	return this.positionNN;
     }
     
+    public NeuralNetwork getNeatNN() {
+    	return this.NeatNN;
+    }
+
     public static NeuralNetwork deserializeNN(String network){
 		try{
 			 FileInputStream fileIn = new FileInputStream("serialized networks/" + network);

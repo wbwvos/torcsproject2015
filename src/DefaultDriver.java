@@ -12,6 +12,7 @@ public class DefaultDriver extends AbstractDriver {
     private NeuralNetwork MyNN;
     private NeuralNetwork speedNN;
     private NeuralNetwork positionNN;
+    private NeuralNetwork NeatNN;
     private double targetSpeed;
     private double targetPosition;
     
@@ -19,6 +20,7 @@ public class DefaultDriver extends AbstractDriver {
     public void control(Action action, SensorModel sensors) {
     	this.directControl(action, sensors);
 //    	this.indirectControl(action, sensors);
+//    	this.NEATControl(action, sensors);
     }
     
     @Override
@@ -28,6 +30,7 @@ public class DefaultDriver extends AbstractDriver {
     		MyNN = MyGenome.getMyNN();
     		this.speedNN = MyGenome.getSpeedNN();
     		this.positionNN = MyGenome.getPositionNN();
+    		this.NeatNN = MyGenome.getNeatNN();
     	} else {
     		System.err.println("Invalid Genome assigned");
     	}
@@ -35,6 +38,10 @@ public class DefaultDriver extends AbstractDriver {
 
     private double[] getValues(SensorModel sensors){     
     	return MyNN.useNN(sensors);
+    }
+    
+    private double[] getNEATValues(SensorModel sensors){     
+    	return NeatNN.useNN(sensors);
     }
     
     public String getDriverName() {
@@ -119,6 +126,20 @@ public class DefaultDriver extends AbstractDriver {
     	System.out.print(action.accelerate + " ");
 //    	System.out.print(action.brake + " " );
     	System.out.print(values[1] + " " );
+    	System.out.print(action.steering +"\n");
+	}
+	
+	private void NEATControl(Action action, SensorModel sensors) {
+		double[] values = getNEATValues(sensors);
+
+    	if(values[1] > values[0]){
+			action.accelerate = values[0];
+    	}else{
+        	action.brake = values[1];
+		}
+    	action.steering = values[2];
+    	System.out.print(action.accelerate + " ");
+    	System.out.print(action.brake + " " );
     	System.out.print(action.steering +"\n");
 	}
 	
