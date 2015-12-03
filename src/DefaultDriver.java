@@ -21,7 +21,8 @@ public class DefaultDriver extends AbstractDriver {
 //    	this.directControl(action, sensors);
 //    	this.indirectControl(action, sensors);
 //    	this.NEATControl(action, sensors);
-    	this.swarmControl(action, sensors);
+//    	this.swarmControl(action, sensors);
+    	this.swarmControlVectorized(action, sensors);
     }
     
     @Override
@@ -176,13 +177,34 @@ public class DefaultDriver extends AbstractDriver {
 			action.accelerate = 1;
 			action.brake = 0;
 			action.steering = - Math.signum(trackPos);
-		}action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
+			return;
+		}
+		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
 		action.brake = this.getSwarmBrake(sensors, targetSpeed);
 		action.steering = this.getSwarmSteering(sensors, frontDistances);
 		System.out.print(action.accelerate + " ");
     	System.out.print(action.brake + " " );
     	System.out.print(action.steering +"\n");
-//    	this.printOpponents(sensors);
+	}
+	
+	private void swarmControlVectorized(Action action, SensorModel sensors) {
+		double[] frontDistances = this.getFrontDistances(sensors);
+		if (frontDistances[0] < 0) {
+			double trackPos = sensors.getTrackPosition();
+			action.accelerate = 1;
+			action.brake = 0;
+			action.steering = - Math.signum(trackPos);
+			return;
+		}
+		int bestAngle = this.argmax(frontDistances);
+		double[] smoothedDistances = this.smooth(frontDistances, bestAngle);
+		double targetSpeed = 2 * smoothedDistances[0];
+		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
+		action.brake = this.getSwarmBrake(sensors, targetSpeed);
+		action.steering = this.getSwarmSteeringVectorized(sensors, smoothedDistances[1]);
+//		System.out.print(action.accelerate + " ");
+//    	System.out.print(action.brake + " " );
+//    	System.out.print(action.steering +"\n");
 	}
 	
 	private double[] getFrontDistances(SensorModel sensors) {
@@ -193,8 +215,46 @@ public class DefaultDriver extends AbstractDriver {
 		for (int i = 0; i < trackEdges.length; ++i) {
 			dists[i] = Math.min(trackEdges[i], opponents[firstOpponent + i]);
 		}
-		this.printArray(dists);
+//		this.printArray(dists);
 		return dists;
+	}
+	
+	private double[] smooth(double[] dists, int best) {
+		int window = 3;
+		double[] xs = new double[2 * window - 1];
+		double[] ys = new double[2 * window - 1];
+		int start = best - (window - 1);
+		int end = best + window;
+		for (int i = start; i < end; ++i) {
+			if (i < 0 || i >= dists.length) {
+				continue;
+			}
+			xs[i - start] = dists[i] * Math.sin(- Math.PI/2 + i * Math.PI/18);
+			ys[i - start] = dists[i] * Math.cos(- Math.PI/2 + i * Math.PI/18);
+		}
+		double[] smoothedX = new double[window];
+		double[] smoothedY = new double[window];
+		for (int i = 0; i < smoothedX.length; ++i) {
+			for (int j = 0; j < window; ++j) {
+				smoothedX[i] += xs[i + j];
+				smoothedY[i] += ys[i + j];
+			}
+			smoothedX[i] /= window;
+			smoothedY[i] /= window;
+		}
+		double bestMagnitude = Double.NEGATIVE_INFINITY;
+		double sine = 0;
+		for (int i = 0; i < smoothedX.length; ++i) {
+			double magnitude = Math.sqrt(smoothedX[i] * smoothedX[i] + smoothedY[i] * smoothedY[i]);
+			if (bestMagnitude < magnitude) {
+				bestMagnitude = magnitude;
+				sine = Math.floor(10 *  (smoothedX[i] / magnitude)) / (double) 10; //smoothedX[i] / magnitude; 
+			}
+		}
+		double[] result = {bestMagnitude, sine};
+//		System.out.println(best);
+//		this.printArray(result);
+		return result;
 	}
 	
 	private double getSwarmAcceleration(SensorModel sensors, double tSpeed) {
@@ -226,6 +286,10 @@ public class DefaultDriver extends AbstractDriver {
 		System.out.println(maxDir);
 		double maxAngle = (double) (maxDir - 9) / (double) 10;
 		return maxAngle;
+	}
+	
+	private double getSwarmSteeringVectorized(SensorModel sensors, double cosine) {
+		return cosine;
 	}
 	
 	private double max(double[] dists) {
