@@ -18,9 +18,10 @@ public class DefaultDriver extends AbstractDriver {
     
     @Override
     public void control(Action action, SensorModel sensors) {
-    	this.directControl(action, sensors);
+//    	this.directControl(action, sensors);
 //    	this.indirectControl(action, sensors);
 //    	this.NEATControl(action, sensors);
+    	this.swarmControl(action, sensors);
     }
     
     @Override
@@ -165,5 +166,95 @@ public class DefaultDriver extends AbstractDriver {
     	System.out.print(action.accelerate + " ");
     	System.out.print(action.brake + " " );
     	System.out.print(action.steering +"\n");
+	}
+	
+	private void swarmControl(Action action, SensorModel sensors) {
+		double[] frontDistances = this.getFrontDistances(sensors);
+		double targetSpeed = 1.7*this.max(frontDistances);
+		if (targetSpeed < 0) {
+			double trackPos = sensors.getTrackPosition();
+			action.accelerate = 1;
+			action.brake = 0;
+			action.steering = - Math.signum(trackPos);
+		}action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
+		action.brake = this.getSwarmBrake(sensors, targetSpeed);
+		action.steering = this.getSwarmSteering(sensors, frontDistances);
+		System.out.print(action.accelerate + " ");
+    	System.out.print(action.brake + " " );
+    	System.out.print(action.steering +"\n");
+//    	this.printOpponents(sensors);
+	}
+	
+	private double[] getFrontDistances(SensorModel sensors) {
+		double[] trackEdges = sensors.getTrackEdgeSensors();
+		double[] opponents = sensors.getOpponentSensors();
+		int firstOpponent = 9;
+		double[] dists = new double[trackEdges.length];
+		for (int i = 0; i < trackEdges.length; ++i) {
+			dists[i] = Math.min(trackEdges[i], opponents[firstOpponent + i]);
+		}
+		this.printArray(dists);
+		return dists;
+	}
+	
+	private double getSwarmAcceleration(SensorModel sensors, double tSpeed) {
+		double curSpeed = sensors.getSpeed();
+		double speedDiff = tSpeed - curSpeed;
+		if (speedDiff < 0) {
+			return 0;
+		} else if (speedDiff > 100) {
+			return 1;
+		} else {
+			return Math.min(1, speedDiff / 50);
+		}
+	}
+	
+	private double getSwarmBrake(SensorModel sensors, double tSpeed) {
+		double curSpeed = sensors.getSpeed();
+		double speedDiff = tSpeed - curSpeed;
+		if (speedDiff > 0) {
+			return 0;
+		} else if (speedDiff < -100) {
+			return 1;
+		} else {
+			return Math.abs(speedDiff / 200);
+		}
+	}
+	
+	private double getSwarmSteering(SensorModel sensors, double[] dists) {
+		int maxDir = this.argmax(dists);
+		System.out.println(maxDir);
+		double maxAngle = (double) (maxDir - 9) / (double) 10;
+		return maxAngle;
+	}
+	
+	private double max(double[] dists) {
+		double max = Double.NEGATIVE_INFINITY;
+		for (double dist : dists) {
+			if (max < dist) {
+				max = dist;
+			}
+		}
+		return max;
+	}
+	
+	private int argmax(double[] dists) {
+		double max = Double.NEGATIVE_INFINITY;
+		int arg = -1;
+		for (int i = 0; i < dists.length; ++i) {
+			if (max < dists[i]) {
+				max = dists[i];
+				arg = i;
+			}
+		}
+		return arg;
+	}
+	
+	private void printArray(double[] array) {
+		for (double number : array) {
+			System.out.print(number + ",");
+		}
+		System.out.println();
+		System.out.flush();
 	}
 }

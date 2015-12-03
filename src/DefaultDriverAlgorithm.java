@@ -9,7 +9,7 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
 
     private static final long serialVersionUID = 654963126362653L;
 
-    DefaultDriverGenome[] drivers = new DefaultDriverGenome[1];
+    DefaultDriverGenome[] drivers = new DefaultDriverGenome[2];
     int [] results = new int[1];
 
     public Class<? extends Driver> getDriverClass(){
@@ -19,9 +19,10 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
     public void run(boolean continue_from_checkpoint) {
         if(!continue_from_checkpoint){
             //init NN
-            DefaultDriverGenome genome = new  DefaultDriverGenome();
-            drivers[0] = genome;
-
+        	for (int i = 0; i < this.drivers.length; ++i) {
+        		drivers[i] = new DefaultDriverGenome();
+        	}
+        	
             //Start a race
             DefaultRace race = new DefaultRace();
             race.setTrack( AbstractRace.DefaultTracks.getTrack(0));
