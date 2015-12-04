@@ -9,7 +9,7 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
 
     private static final long serialVersionUID = 654963126362653L;
 
-    DefaultDriverGenome[] drivers = new DefaultDriverGenome[4];
+    DefaultDriverGenome[] drivers = new DefaultDriverGenome[2];
     int [] results = new int[1];
 
     public Class<? extends Driver> getDriverClass(){
@@ -64,10 +64,14 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
             if(DriversUtils.hasCheckpoint()){
                 DriversUtils.loadCheckpoint().run(true);
             } else {
-                algorithm.run();
+            	while(true){
+            		algorithm.run();
+            	}
             }
         } else {
-            algorithm.run();
+        	while(true){
+        		algorithm.run();
+        	}
         }
     }
 
