@@ -31,7 +31,7 @@ public class DefaultDriver extends AbstractDriver {
     		MyNN = MyGenome.getMyNN();
     		this.speedNN = MyGenome.getSpeedNN();
     		this.positionNN = MyGenome.getPositionNN();
-    		this.NeatNN = MyGenome.getNeatNN();
+    		//this.NeatNN = MyGenome.getNeatNN();
     	} else {
     		System.err.println("Invalid Genome assigned");
     	}
@@ -170,13 +170,15 @@ public class DefaultDriver extends AbstractDriver {
 	
 	private void swarmControl(Action action, SensorModel sensors) {
 		double[] frontDistances = this.getFrontDistances(sensors);
-		double targetSpeed = 1.7*this.max(frontDistances);
+		double targetSpeed = 2*this.max(frontDistances); //possible optimization
 		if (targetSpeed < 0) {
 			double trackPos = sensors.getTrackPosition();
 			action.accelerate = 1;
 			action.brake = 0;
 			action.steering = - Math.signum(trackPos);
-		}action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
+			return;
+		}
+		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
 		action.brake = this.getSwarmBrake(sensors, targetSpeed);
 		action.steering = this.getSwarmSteering(sensors, frontDistances);
 		System.out.print(action.accelerate + " ");
@@ -202,30 +204,56 @@ public class DefaultDriver extends AbstractDriver {
 		double speedDiff = tSpeed - curSpeed;
 		if (speedDiff < 0) {
 			return 0;
-		} else if (speedDiff > 100) {
+		} else if (speedDiff > 25) { //possible optimization
 			return 1;
-		} else {
-			return Math.min(1, speedDiff / 50);
+		} else { 
+			return Math.min(1, speedDiff / 25); //possible optimization
 		}
 	}
 	
 	private double getSwarmBrake(SensorModel sensors, double tSpeed) {
 		double curSpeed = sensors.getSpeed();
 		double speedDiff = tSpeed - curSpeed;
+		int brakeDiff = 20; //possible optimization
+		if (curSpeed > 150){
+			brakeDiff = 15;
+		}
+		if(curSpeed > 200){
+			brakeDiff = 5;
+		}
+		if(curSpeed > 225){
+			brakeDiff = 3;
+		}
+		if(curSpeed > 250){
+			brakeDiff = 1;
+		}
+		System.out.println("BRAKEDIFF:" + brakeDiff);
 		if (speedDiff > 0) {
 			return 0;
-		} else if (speedDiff < -100) {
+		} else if (speedDiff < - brakeDiff) {
 			return 1;
 		} else {
-			return Math.abs(speedDiff / 200);
+			return Math.abs(speedDiff / 50); //possible optimization (was 200)
 		}
 	}
 	
 	private double getSwarmSteering(SensorModel sensors, double[] dists) {
 		int maxDir = this.argmax(dists);
-		System.out.println(maxDir);
+		double weightedDir = this.getWeightedDir(dists);
+		//System.out.println(maxDir);
+		//System.out.println(weightedDir);
 		double maxAngle = (double) (maxDir - 9) / (double) 10;
-		return maxAngle;
+		double maxAngleWeighted = (double) (weightedDir - 9) / (double) 10;
+		//return (maxAngle + maxAngle +  maxAngleWeighted)/3;
+		if(maxAngle <= 0.2 && maxAngle >= -0.2){
+			System.out.println("maxAngleWeighted activated");
+			return maxAngleWeighted;
+		}else{
+			System.out.println("maxAngle activated");
+			return (maxAngle + maxAngle +  maxAngleWeighted)/3; //Weighted
+		}
+
+		//return maxAngle;
 	}
 	
 	private double max(double[] dists) {
@@ -248,6 +276,18 @@ public class DefaultDriver extends AbstractDriver {
 			}
 		}
 		return arg;
+	}
+	
+	private double getWeightedDir(double[] dists){
+		double totalWeight = 0.0;
+		double totalFreq = 0.0;
+		for(int i = 0; i < dists.length ; i++){
+			totalFreq = totalFreq + dists[i];
+			totalWeight = totalWeight + (double) (i) * dists[i];
+		}
+		double weightedDir = totalWeight/totalFreq;
+		//System.out.print(weightedDir);
+		return weightedDir;
 	}
 	
 	private void printArray(double[] array) {

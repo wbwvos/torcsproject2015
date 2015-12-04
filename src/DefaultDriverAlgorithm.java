@@ -9,7 +9,7 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
 
     private static final long serialVersionUID = 654963126362653L;
 
-    DefaultDriverGenome[] drivers = new DefaultDriverGenome[2];
+    DefaultDriverGenome[] drivers = new DefaultDriverGenome[4];
     int [] results = new int[1];
 
     public Class<? extends Driver> getDriverClass(){
