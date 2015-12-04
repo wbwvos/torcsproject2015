@@ -192,6 +192,10 @@ public class DefaultDriver extends AbstractDriver {
 	}
 	
 	private void swarmControlVectorized(Action action, SensorModel sensors) {
+		System.out.println(sensors.getRacePosition() + ": "+sensors.getLastLapTime());
+		if(sensors.getRacePosition() == 4 && sensors.getLastLapTime() != 0.0){
+			action.abandonRace = true;
+		}
 		double[] frontDistances = this.getFrontDistances(sensors);
 		if (frontDistances[0] < 0) {
 			double trackPos = sensors.getTrackPosition();
@@ -202,7 +206,7 @@ public class DefaultDriver extends AbstractDriver {
 		}
 		int bestAngle = this.argmax(frontDistances);
 		double[] smoothedDistances = this.smooth(frontDistances, bestAngle);
-		double targetSpeed = 2 * smoothedDistances[0];
+		double targetSpeed = 2.5 * smoothedDistances[0];
 		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
 		action.brake = this.getSwarmBrake(sensors, targetSpeed);
 		action.steering = this.getSwarmSteeringVectorized(sensors, smoothedDistances[1]);
