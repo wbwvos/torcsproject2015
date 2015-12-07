@@ -21,8 +21,8 @@ public class DefaultDriver extends AbstractDriver {
 //    	this.directControl(action, sensors);
 //    	this.indirectControl(action, sensors);
 //    	this.NEATControl(action, sensors);
-    	this.swarmControl(action, sensors);
-//    	this.swarmControlVectorized(action, sensors);
+//    	this.swarmControl(action, sensors);
+    	this.swarmControlVectorized(action, sensors);
     }
     
     @Override
@@ -192,7 +192,7 @@ public class DefaultDriver extends AbstractDriver {
 	}
 	
 	private void swarmControlVectorized(Action action, SensorModel sensors) {
-		System.out.println(sensors.getRacePosition() + ": "+sensors.getLastLapTime());
+//		System.out.println(sensors.getRacePosition() + ": " + sensors.getLastLapTime());
 		if(sensors.getRacePosition() == 4 && sensors.getLastLapTime() != 0.0){
 			action.abandonRace = true;
 		}
@@ -206,7 +206,7 @@ public class DefaultDriver extends AbstractDriver {
 		}
 		int bestAngle = this.argmax(frontDistances);
 		double[] smoothedDistances = this.smooth(frontDistances, bestAngle);
-		double targetSpeed = 2.5 * smoothedDistances[0];
+		double targetSpeed = 2 * smoothedDistances[0];
 		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
 		action.brake = this.getSwarmBrake(sensors, targetSpeed);
 		action.steering = this.getSwarmSteeringVectorized(sensors, smoothedDistances[1]);
@@ -228,7 +228,7 @@ public class DefaultDriver extends AbstractDriver {
 	}
 	
 	private double[] smooth(double[] dists, int best) {
-		int window = 3;
+		int window = 1;
 		double[] xs = new double[2 * window - 1];
 		double[] ys = new double[2 * window - 1];
 		int start = best - (window - 1);
@@ -256,7 +256,7 @@ public class DefaultDriver extends AbstractDriver {
 			double magnitude = Math.sqrt(smoothedX[i] * smoothedX[i] + smoothedY[i] * smoothedY[i]);
 			if (bestMagnitude < magnitude) {
 				bestMagnitude = magnitude;
-				sine = Math.floor(10 *  (smoothedX[i] / magnitude)) / (double) 10; //smoothedX[i] / magnitude; 
+				sine = smoothedX[i] / magnitude; // Math.floor(10 *  (smoothedX[i] / magnitude)) / (double) 10; // 
 			}
 		}
 		double[] result = {bestMagnitude, sine};
