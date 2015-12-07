@@ -1,3 +1,20 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import org.encog.neural.networks.BasicNetwork;
+
 import cicontest.algorithm.abstracts.AbstractDriver;
 import cicontest.torcs.client.Action;
 import cicontest.torcs.client.SensorModel;
@@ -15,6 +32,7 @@ public class DefaultDriver extends AbstractDriver {
     private NeuralNetwork NeatNN;
     private double targetSpeed;
     private double targetPosition;
+    public double[] evo = new double[10]; 
     
     @Override
     public void control(Action action, SensorModel sensors) {
@@ -32,10 +50,125 @@ public class DefaultDriver extends AbstractDriver {
     		MyNN = MyGenome.getMyNN();
     		this.speedNN = MyGenome.getSpeedNN();
     		this.positionNN = MyGenome.getPositionNN();
+    		this.evolutionaryValuesInit();
+    		//this.getBestEvo();
+    		//this.evolutionaryValuesGauss();
     		//this.NeatNN = MyGenome.getNeatNN();
     	} else {
     		System.err.println("Invalid Genome assigned");
     	}
+    }
+    
+    public double randomGaussian(double value){
+    	Random randomGenerator = new Random();
+    	
+    	double random = randomGenerator.nextGaussian();
+    	int weight = 50;
+    	return value * ((random/weight) + 1);
+    }
+
+    
+    
+    public double[] evolutionaryValuesInit(){
+    	System.out.println("EVINIT");
+    	evo[0] = 2.0; //targetSpeedMultiplier
+    	evo[1] = 2.0; //smoothedTargetSpeedMultiplier
+    	evo[2] = 2.0; //opponentSensorMultiplier
+    	evo[3] = 3.0; //smootedWindowsSize
+    	evo[4] = 25.0; //accelerationDiff
+    	evo[5] = 50.0; //brakeDiffOrig
+    	evo[6] = 2.0; //brakeDiffMultiplier
+    	evo[7] = 0.2; //switchSteering
+    	evo[8] = 0.6; //combiSteeringNormalWeight
+    	evo[9] = 0.4; //CombiSteeringSmoothedWeight
+    	return evo;
+    }
+    
+    public double[] evolutionaryValuesGauss(){
+    	System.out.println("EVGAUSS");
+    	evo[0] = Math.max(2, Math.min(3, randomGaussian(evo[0]))); //targetSpeedMultiplier
+    	evo[1] = Math.max(2, Math.min(3, randomGaussian(evo[1]))); //smoothedTargetSpeedMultiplier
+    	evo[2] = Math.max(1, Math.min(4, randomGaussian(evo[2]))); //opponentSensorMultiplier
+    	evo[3] = Math.round(Math.max(1, Math.min(9, randomGaussian(evo[3])))); //smootedWindowsSize
+    	evo[4] = Math.round(Math.max(1, Math.min(50, randomGaussian(evo[4])))); //accelerationDiff
+    	evo[5] = Math.round(Math.max(1, Math.min(100, randomGaussian(evo[5])))); //brakeDiffOrig
+    	evo[6] = Math.round(Math.max(1, Math.min(10, randomGaussian(evo[6])))); //brakeDiffMultiplier
+    	evo[7] = Math.max(0, Math.min(1, randomGaussian(evo[7]))); //switchSteering
+    	evo[8] = Math.max(0, Math.min(10, randomGaussian(evo[8]))); //combiSteeringNormalWeight
+    	evo[9] = Math.max(0, Math.min(10, randomGaussian(evo[9]))); //CombiSteeringSmoothedWeight
+    	printEvo();
+    	return evo;
+    }
+    
+    public void writeEvo(SensorModel sensors){
+    	try {
+    		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("evoresults/results.csv", true)));
+    		for(double value : evo){
+    			out.print(value + ";");
+    		}
+    		out.println(sensors.getLastLapTime());
+    		out.close();
+    	}catch (IOException e) {
+    	    //exception handling left as an exercise for the reader
+    	}
+    }
+    
+    public void getBestEvo(){
+    	BufferedReader br = null;
+    	try {
+			br = new BufferedReader(new FileReader("evoresults/results.csv"));
+			//skip header
+			String line = "";
+			int counter = 0;
+			int best = 0;
+			double bestTime = Double.POSITIVE_INFINITY;
+			while ((line = br.readLine()) != null) {
+				counter++;
+				// use comma as separator
+				String[] values = line.split(";");
+				
+				double currentTime = Double.parseDouble(values[values.length-1]);
+				System.out.println("current time: " + currentTime + " bestTime: " + bestTime);
+				if(currentTime < bestTime && currentTime != 0.0){
+					bestTime = currentTime;
+					best = counter;
+					for(int i = 0; i < evo.length-2; i++){
+						evo[i] = Double.parseDouble(values[i]);
+					}
+				}
+				System.out.println("current time: " + currentTime + " bestTime: " + bestTime);
+			}
+			System.out.println("BEST PARENT: " + best);
+			printEvo();
+		} 
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+    	finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+    	}
+    }
+    
+    public void printEvo(){
+    	System.out.println("targetSpeedMultiplier: " + evo[0]);
+    	System.out.println("smoothedTargetSpeedMultiplier: " + evo[1]);
+    	System.out.println("opponentSensorMultiplier: " + evo[2]);
+    	System.out.println("smootedWindowsSize: " + evo[3]);
+    	System.out.println("accelerationDiff: " + evo[4]);
+    	System.out.println("brakeDiffOrig: " + evo[5]);
+    	System.out.println("brakeDiffMultiplier: " + evo[6]);
+    	System.out.println("switchSteering: " + evo[7]);
+    	System.out.println("combiSteeringNormalWeight: " + evo[8]);
+    	System.out.println("CombiSteeringSmoothedWeight: " + evo[9]);
     }
 
     private double[] getValues(SensorModel sensors){     
@@ -46,10 +179,11 @@ public class DefaultDriver extends AbstractDriver {
     	return NeatNN.useNN(sensors);
     }
     
-    public String getDriverName() {
-        return "simple example";
-    }
+    private double id = Math.random();
     
+    public String getDriverName() {
+        return "simple example: " + this.id;
+    }
     
     
     public void controlQualification(Action action, SensorModel sensors) {
@@ -170,12 +304,18 @@ public class DefaultDriver extends AbstractDriver {
 	}
 	
 	private void swarmControl(Action action, SensorModel sensors) {
-		System.out.println(sensors.getRacePosition() + ": "+sensors.getLastLapTime());
-		if(sensors.getRacePosition() == 4 && sensors.getLastLapTime() != 0.0){
+		//System.out.println(sensors.getRacePosition() + ": "+sensors.getLastLapTime());
+		if(sensors.getRacePosition() == 1 && sensors.getLastLapTime() != 0.0){
+			writeEvo(sensors);
+			action.abandonRace = true;
+		}
+		if(sensors.getDamage() > 0){
+			writeEvo(sensors);
 			action.abandonRace = true;
 		}
 		double[] frontDistances = this.getFrontDistances(sensors);
-		double targetSpeed = 2*this.max(frontDistances); //possible optimization
+		double targetSpeedMultiplier = evo[0];
+		double targetSpeed = targetSpeedMultiplier*this.max(frontDistances); //possible optimization
 		if (targetSpeed < 0) {
 			double trackPos = sensors.getTrackPosition();
 			action.accelerate = 1;
@@ -192,8 +332,8 @@ public class DefaultDriver extends AbstractDriver {
 	}
 	
 	private void swarmControlVectorized(Action action, SensorModel sensors) {
-//		System.out.println(sensors.getRacePosition() + ": " + sensors.getLastLapTime());
-		if(sensors.getRacePosition() == 4 && sensors.getLastLapTime() != 0.0){
+		System.out.println(sensors.getRacePosition() + ": "+sensors.getLastLapTime());
+		if(sensors.getRacePosition() == 1 && sensors.getLastLapTime() != 0.0){
 			action.abandonRace = true;
 		}
 		double[] frontDistances = this.getFrontDistances(sensors);
@@ -205,8 +345,9 @@ public class DefaultDriver extends AbstractDriver {
 			return;
 		}
 		int bestAngle = this.argmax(frontDistances);
+		double smoothedTargetSpeedMultiplier = evo[1];
 		double[] smoothedDistances = this.smooth(frontDistances, bestAngle);
-		double targetSpeed = 2 * smoothedDistances[0];
+		double targetSpeed = smoothedTargetSpeedMultiplier * smoothedDistances[0];
 		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
 		action.brake = this.getSwarmBrake(sensors, targetSpeed);
 		action.steering = this.getSwarmSteeringVectorized(sensors, smoothedDistances[1]);
@@ -219,16 +360,19 @@ public class DefaultDriver extends AbstractDriver {
 		double[] trackEdges = sensors.getTrackEdgeSensors();
 		double[] opponents = sensors.getOpponentSensors();
 		int firstOpponent = 9;
+		double opponentSensorMultiplier = evo[2];
 		double[] dists = new double[trackEdges.length];
 		for (int i = 0; i < trackEdges.length; ++i) {
-			dists[i] = Math.min(trackEdges[i], opponents[firstOpponent + i]*2);
+			dists[i] = Math.min(trackEdges[i], opponents[firstOpponent + i]*opponentSensorMultiplier); // optimize
 		}
 //		this.printArray(dists);
 		return dists;
 	}
+ 
 	
 	private double[] smooth(double[] dists, int best) {
-		int window = 1;
+		double windowSize = evo[3];
+		int window = (int) windowSize; // optimize
 		double[] xs = new double[2 * window - 1];
 		double[] ys = new double[2 * window - 1];
 		int start = best - (window - 1);
@@ -264,31 +408,34 @@ public class DefaultDriver extends AbstractDriver {
 //		this.printArray(result);
 		return result;
 	}
-	
 	private double getSwarmAcceleration(SensorModel sensors, double tSpeed) {
 		double curSpeed = sensors.getSpeed();
 		double speedDiff = tSpeed - curSpeed;
+		double accelerationDiff = evo[4];
 		if (speedDiff < 0) {
 			return 0;
-		} else if (speedDiff > 25) { //possible optimization
+		} else if (speedDiff > accelerationDiff) { //possible optimization
 			return 1;
 		} else { 
-			return Math.min(1, speedDiff / 25); //possible optimization
+			return Math.min(1, speedDiff / accelerationDiff); //possible optimization
 		}
 	}
+	
 	
 	private double getSwarmBrake(SensorModel sensors, double tSpeed) {
 		double curSpeed = sensors.getSpeed();
 		double speedDiff = tSpeed - curSpeed;
-		int brakeDiff = 20; //possible optimization
+		double brakeDiffOrig = evo[5];
+		double brakeDiffMultiplier = evo[6];
+		double brakeDiff = brakeDiffOrig; //possible optimization
 		if (curSpeed > 150){
-			brakeDiff = 15;
+			brakeDiff = brakeDiffOrig * 0.75;
 		}
 		if(curSpeed > 200){
-			brakeDiff = 5;
+			brakeDiff = brakeDiffOrig * 0.25;
 		}
 		if(curSpeed > 225){
-			brakeDiff = 3;
+			brakeDiff = brakeDiffOrig * 0.15;
 		}
 		if(curSpeed > 250){
 			brakeDiff = 1;
@@ -299,7 +446,7 @@ public class DefaultDriver extends AbstractDriver {
 		} else if (speedDiff < - brakeDiff) {
 			return 1;
 		} else {
-			return Math.min(1, Math.abs(speedDiff / 50)); //possible optimization (was 200)
+			return Math.min(1, Math.abs(speedDiff / (brakeDiff * brakeDiffMultiplier))); //possible optimization (was 200)
 		}
 	}
 	
@@ -311,12 +458,12 @@ public class DefaultDriver extends AbstractDriver {
 		double maxAngle = (double) (maxDir - 9) / (double) 10;
 		double maxAngleWeighted = (double) (weightedDir - 9) / (double) 10;
 		//return (maxAngle + maxAngle +  maxAngleWeighted)/3;
-		if(maxAngle <= 0.2 && maxAngle >= -0.2){
+		if(maxAngle <= evo[7] && maxAngle >= - evo[7]){
 			//System.out.println("maxAngleWeighted activated");
 			return maxAngleWeighted;
 		}else{
 			//System.out.println("maxAngle activated");
-			return (maxAngle + maxAngle +  maxAngleWeighted)/3; //Weighted
+			return (evo[8]*maxAngle +  evo[9]*maxAngleWeighted)/(evo[8] + evo[9]); //Weighted
 		}
 
 		//return maxAngle;
@@ -366,5 +513,40 @@ public class DefaultDriver extends AbstractDriver {
 		}
 		System.out.println();
 		System.out.flush();
+	}
+	
+	public static void serializeEvo(double[][] evolutionaryValues){
+		try{
+			FileOutputStream fileOut = new FileOutputStream("evo/evolutionaryValues.ser");
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(evolutionaryValues);
+	        out.close();
+	        fileOut.close();
+	        System.out.printf("Serialized data is saved in evolutionaryValues.ser");
+		}
+		catch(IOException i){
+			i.printStackTrace();
+		}
+	}
+		
+	public static double[][] deserializeEvo(){
+		try{
+			FileInputStream fileIn = new FileInputStream("evo/evolutionaryValues.ser");
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			double[][] evolutionaryValues = (double[][]) in.readObject();
+			in.close();
+			fileIn.close();
+			System.out.println("Deserialized evolutionaryValues.ser");
+			return evolutionaryValues;
+		}
+		catch(IOException i){
+			i.printStackTrace();
+			return null;
+		}
+		catch(ClassNotFoundException c){
+			System.out.println("Employee class not found");
+			c.printStackTrace();
+			return null;
+		}
 	}
 }
