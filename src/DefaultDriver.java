@@ -33,6 +33,7 @@ public class DefaultDriver extends AbstractDriver {
     private double targetSpeed;
     private double targetPosition;
     public double[] evo = new double[10]; 
+    int counter = 0;
     
     @Override
     public void control(Action action, SensorModel sensors) {
@@ -51,8 +52,8 @@ public class DefaultDriver extends AbstractDriver {
     		this.speedNN = MyGenome.getSpeedNN();
     		this.positionNN = MyGenome.getPositionNN();
     		this.evolutionaryValuesInit();
-    		//this.getBestEvo();
-    		//this.evolutionaryValuesGauss();
+    		this.getBestEvo();
+    		this.evolutionaryValuesGauss();
     		//this.NeatNN = MyGenome.getNeatNN();
     	} else {
     		System.err.println("Invalid Genome assigned");
@@ -63,7 +64,8 @@ public class DefaultDriver extends AbstractDriver {
     	Random randomGenerator = new Random();
     	
     	double random = randomGenerator.nextGaussian();
-    	int weight = 50;
+    	int weight = Math.max(1, (counter % 15)*5);
+    	System.out.print("SIGMA: " + weight);
     	return value * ((random/weight) + 1);
     }
 
@@ -119,7 +121,7 @@ public class DefaultDriver extends AbstractDriver {
 			br = new BufferedReader(new FileReader("evoresults/results.csv"));
 			//skip header
 			String line = "";
-			int counter = 0;
+			counter = 0;
 			int best = 0;
 			double bestTime = Double.POSITIVE_INFINITY;
 			while ((line = br.readLine()) != null) {
@@ -426,27 +428,27 @@ public class DefaultDriver extends AbstractDriver {
 		double curSpeed = sensors.getSpeed();
 		double speedDiff = tSpeed - curSpeed;
 		double brakeDiffOrig = evo[5];
-		double brakeDiffMultiplier = evo[6];
+		//double brakeDiffMultiplier = evo[6];
 		double brakeDiff = brakeDiffOrig; //possible optimization
-		if (curSpeed > 150){
-			brakeDiff = brakeDiffOrig * 0.75;
-		}
-		if(curSpeed > 200){
-			brakeDiff = brakeDiffOrig * 0.25;
-		}
-		if(curSpeed > 225){
-			brakeDiff = brakeDiffOrig * 0.15;
-		}
-		if(curSpeed > 250){
-			brakeDiff = 1;
-		}
+//		if (curSpeed > 150){
+//			brakeDiff = brakeDiffOrig * 0.75;
+//		}
+//		if(curSpeed > 200){
+//			brakeDiff = brakeDiffOrig * 0.25;
+//		}
+//		if(curSpeed > 225){
+//			brakeDiff = brakeDiffOrig * 0.15;
+//		}
+//		if(curSpeed > 250){
+//			brakeDiff = 1;
+//		}
 		//System.out.println("BRAKEDIFF:" + brakeDiff);
 		if (speedDiff > 0) {
 			return 0;
 		} else if (speedDiff < - brakeDiff) {
 			return 1;
 		} else {
-			return Math.min(1, Math.abs(speedDiff / (brakeDiff * brakeDiffMultiplier))); //possible optimization (was 200)
+			return Math.min(1, Math.abs(speedDiff / brakeDiffOrig)); //possible optimization (was 200)(brakeDiff * brakeDiffMultiplier)
 		}
 	}
 	
