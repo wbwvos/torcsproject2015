@@ -1,11 +1,16 @@
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.encog.neural.networks.BasicNetwork;
@@ -46,7 +51,8 @@ public class DefaultDriver extends AbstractDriver {
     		this.speedNN = MyGenome.getSpeedNN();
     		this.positionNN = MyGenome.getPositionNN();
     		this.evolutionaryValuesInit();
-    		this.evolutionaryValuesGauss();
+    		//this.getBestEvo();
+    		//this.evolutionaryValuesGauss();
     		//this.NeatNN = MyGenome.getNeatNN();
     	} else {
     		System.err.println("Invalid Genome assigned");
@@ -57,7 +63,8 @@ public class DefaultDriver extends AbstractDriver {
     	Random randomGenerator = new Random();
     	
     	double random = randomGenerator.nextGaussian();
-    	return value * ((random/2) + 1);
+    	int weight = 50;
+    	return value * ((random/weight) + 1);
     }
 
     
@@ -74,7 +81,6 @@ public class DefaultDriver extends AbstractDriver {
     	evo[7] = 0.2; //switchSteering
     	evo[8] = 0.6; //combiSteeringNormalWeight
     	evo[9] = 0.4; //CombiSteeringSmoothedWeight
-    	printEvo();
     	return evo;
     }
     
@@ -104,6 +110,51 @@ public class DefaultDriver extends AbstractDriver {
     		out.close();
     	}catch (IOException e) {
     	    //exception handling left as an exercise for the reader
+    	}
+    }
+    
+    public void getBestEvo(){
+    	BufferedReader br = null;
+    	try {
+			br = new BufferedReader(new FileReader("evoresults/results.csv"));
+			//skip header
+			String line = "";
+			int counter = 0;
+			int best = 0;
+			double bestTime = Double.POSITIVE_INFINITY;
+			while ((line = br.readLine()) != null) {
+				counter++;
+				// use comma as separator
+				String[] values = line.split(";");
+				
+				double currentTime = Double.parseDouble(values[values.length-1]);
+				System.out.println("current time: " + currentTime + " bestTime: " + bestTime);
+				if(currentTime < bestTime && currentTime != 0.0){
+					bestTime = currentTime;
+					best = counter;
+					for(int i = 0; i < evo.length-2; i++){
+						evo[i] = Double.parseDouble(values[i]);
+					}
+				}
+				System.out.println("current time: " + currentTime + " bestTime: " + bestTime);
+			}
+			System.out.println("BEST PARENT: " + best);
+			printEvo();
+		} 
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+    	finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
     	}
     }
     
