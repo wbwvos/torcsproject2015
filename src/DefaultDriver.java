@@ -52,8 +52,8 @@ public class DefaultDriver extends AbstractDriver {
     		this.speedNN = MyGenome.getSpeedNN();
     		this.positionNN = MyGenome.getPositionNN();
     		this.evolutionaryValuesInit();
-    		//this.getBestEvo();
-    		//this.evolutionaryValuesGauss();
+//    		this.getBestEvo();
+//    		this.evolutionaryValuesGauss();
     		//this.NeatNN = MyGenome.getNeatNN();
     	} else {
     		System.err.println("Invalid Genome assigned");
@@ -72,7 +72,7 @@ public class DefaultDriver extends AbstractDriver {
     
     
     public double[] evolutionaryValuesInit(){
-    	System.out.println("EVINIT");
+//    	System.out.println("EVINIT");
 //    	evo[0] = 2.0; //targetSpeedMultiplier
 //    	evo[1] = 2.0; //smoothedTargetSpeedMultiplier
 //    	evo[2] = 2.0; //opponentSensorMultiplier
@@ -84,11 +84,11 @@ public class DefaultDriver extends AbstractDriver {
 //    	evo[8] = 0.6; //combiSteeringNormalWeight
 //    	evo[9] = 0.4; //CombiSteeringSmoothedWeight
     	evo[0] = 0.0;
-    	evo[1] = 2.342965142;
+    	evo[1] = 2.6084724126;
     	evo[2] = 2;
     	evo[3] = 3;
-    	evo[4] = 15.25;
-    	evo[5] = 25;
+    	evo[4] = 15;
+    	evo[5] = 27.16666667;
     	evo[6] = 0.0;
     	evo[7] = 0.0;
     	evo[8] = 0.0;
@@ -101,7 +101,7 @@ public class DefaultDriver extends AbstractDriver {
     	evo[0] = Math.max(2, Math.min(3, randomGaussian(evo[0]))); //targetSpeedMultiplier
     	evo[1] = Math.max(2, Math.min(4, randomGaussian(evo[1]))); //smoothedTargetSpeedMultiplier
     	evo[2] = Math.max(1, Math.min(4, randomGaussian(evo[2]))); //opponentSensorMultiplier
-    	evo[3] = Math.round(Math.max(1, Math.min(9, randomGaussian(evo[3])))); //smootedWindowsSize
+//    	evo[3] = Math.round(Math.max(1, Math.min(9, randomGaussian(evo[3])))); //smootedWindowsSize
     	evo[4] = Math.round(Math.max(1, Math.min(50, randomGaussian(evo[4])))); //accelerationDiff
     	evo[5] = Math.round(Math.max(1, Math.min(100, randomGaussian(evo[5])))); //brakeDiffOrig
     	evo[6] = Math.round(Math.max(1, Math.min(10, randomGaussian(evo[6])))); //brakeDiffMultiplier
@@ -135,7 +135,10 @@ public class DefaultDriver extends AbstractDriver {
 			int best = 0;
 			double bestTime = Double.POSITIVE_INFINITY;
 			while ((line = br.readLine()) != null) {
-				counter++;
+				if (line.equals("")) {
+					continue;
+				}
+				++counter;
 				// use comma as separator
 				String[] values = line.split(";");
 				
@@ -348,14 +351,14 @@ public class DefaultDriver extends AbstractDriver {
 	
 	private void swarmControlVectorized(Action action, SensorModel sensors) {
 		//System.out.println(sensors.getRacePosition() + ": "+sensors.getLastLapTime());
-		if(sensors.getRacePosition() == 1 && sensors.getLastLapTime() != 0.0){
-			writeEvo(sensors);
-			action.abandonRace = true;
-		}
-		if(sensors.getDamage() > 0){
-			writeEvo(sensors);
-			action.abandonRace = true;
-		}
+//		if(sensors.getRacePosition() == 1 && sensors.getLastLapTime() != 0.0){
+//			writeEvo(sensors);
+//			action.abandonRace = true;
+//		}
+//		if(sensors.getDamage() > 0){
+//			writeEvo(sensors);
+//			action.abandonRace = true;
+//		}
 		double[] frontDistances = this.getFrontDistances(sensors);
 		if (frontDistances[0] < 0) {
 			double trackPos = sensors.getTrackPosition();
