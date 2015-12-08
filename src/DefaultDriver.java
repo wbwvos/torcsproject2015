@@ -197,7 +197,7 @@ public class DefaultDriver extends AbstractDriver {
     private double id = Math.random();
     
     public String getDriverName() {
-        return "simple example: " + this.id;
+        return "SupaflAI";
     }
     
     
