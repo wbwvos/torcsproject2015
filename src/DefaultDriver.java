@@ -33,6 +33,7 @@ public class DefaultDriver extends AbstractDriver {
     private NeuralNetwork speedNN;
     private NeuralNetwork positionNN;
     private NeuralNetwork NeatNN;
+    private NeuralNetwork TargetSpeedNN;
     private double targetSpeed;
     private double targetPosition;
     public double[] evo = new double[10]; 
@@ -40,11 +41,11 @@ public class DefaultDriver extends AbstractDriver {
     
     @Override
     public void control(Action action, SensorModel sensors) {
-    	this.directControl(action, sensors);
+//    	this.directControl(action, sensors);
 //    	this.indirectControl(action, sensors);
 //    	this.NEATControl(action, sensors);
 //    	this.swarmControl(action, sensors);
-//    	this.swarmControlVectorized(action, sensors);
+    	this.swarmControlVectorized(action, sensors);
     	
     }
     
@@ -53,11 +54,12 @@ public class DefaultDriver extends AbstractDriver {
     	if (genome instanceof DefaultDriverGenome) {
     		DefaultDriverGenome MyGenome = (DefaultDriverGenome) genome;
     		MyNN = MyGenome.getMyNN();
-    		AccelerateNN = MyGenome.getAccelerateNN();
-    		BreakNN = MyGenome.getBreakNN();
-    		SteeringNN = MyGenome.getSteeringNN();
-    		this.speedNN = MyGenome.getSpeedNN();
-    		this.positionNN = MyGenome.getPositionNN();
+    		//AccelerateNN = MyGenome.getAccelerateNN();
+    		//BreakNN = MyGenome.getBreakNN();
+    		//this.SteeringNN = MyGenome.getSteeringNN();
+    		//this.speedNN = MyGenome.getSpeedNN();
+    		//this.positionNN = MyGenome.getPositionNN();
+    		//this.TargetSpeedNN = MyGenome.getTargetSpeed();
     		this.evolutionaryValuesInit();
 //    		this.getBestEvo();
 //    		this.evolutionaryValuesGauss();
@@ -91,7 +93,7 @@ public class DefaultDriver extends AbstractDriver {
 //    	evo[8] = 0.6; //combiSteeringNormalWeight
 //    	evo[9] = 0.4; //CombiSteeringSmoothedWeight
     	evo[0] = 0.0;
-    	evo[1] = 2.6084724126;
+    	evo[1] = 2.4084724126;
     	evo[2] = 2;
     	evo[3] = 3;
     	evo[4] = 15;
@@ -207,14 +209,21 @@ public class DefaultDriver extends AbstractDriver {
     	return outputvalues;
     }
     
+    private double[] getValuesTwoNN(SensorModel sensors){
+    	double[] outputvalues = new double[2];
+
+    	outputvalues[0] = TargetSpeedNN.useSeperateNN(sensors, false)[0];
+    	outputvalues[1] = SteeringNN.useSeperateNN(sensors, false)[0];
+    	
+    	return outputvalues;
+    }
+    
     private double[] getNEATValues(SensorModel sensors){     
     	return NeatNN.useNN(sensors);
     }
-    
-    private double id = Math.random();
-    
+
     public String getDriverName() {
-        return "superflAI: ";
+        return "SupaflAI";
     }
     
     
@@ -313,27 +322,28 @@ public class DefaultDriver extends AbstractDriver {
 	}
 	
 	private void indirectControl(Action action, SensorModel sensors) {
-		this.targetSpeed = Math.abs(this.speedNN.predict(sensors));
-		this.targetPosition = this.positionNN.predict(sensors);
-		System.out.println(this.targetSpeed);
-		double minSpeed = this.targetSpeed; //50;
-		if (this.targetSpeed < minSpeed) {
-			this.targetSpeed = minSpeed;
-		}
-
-		System.out.println("Current Speed: " + sensors.getSpeed());
-		System.out.println("Target Speed: " + this.targetSpeed);
-		System.out.println("Current Pos: " + sensors.getTrackPosition());
-		System.out.println("Target Pos: " + this.targetPosition);
+		double[] values = getValuesTwoNN(sensors);
+		//this.targetSpeed = Math.abs(this.speedNN.predict(sensors));
+		//double targetSpeed = values[0];
+		double steering = values[1];
 		
-		double steering = this.getSteering(sensors);
-		boolean smooth = Math.abs(steering) < 0.15;
-		action.accelerate = this.getAcceleration(sensors);
-    	action.brake = this.getBrake(sensors);
-    	action.steering = smooth ? 0 : steering;
-    	System.out.print(action.accelerate + " ");
-    	System.out.print(action.brake + " " );
-    	System.out.print(action.steering +"\n");
+		double[] frontDistances = this.getFrontDistances(sensors);
+		if (frontDistances[0] < 0) {
+			double trackPos = sensors.getTrackPosition();
+			action.accelerate = 1;
+			action.brake = 0;
+			action.steering = - Math.signum(trackPos);
+			return;
+		}
+		int bestAngle = this.argmax(frontDistances);
+		double smoothedTargetSpeedMultiplier = evo[1];
+		double[] smoothedDistances = this.smooth(frontDistances, bestAngle);
+		double targetSpeed = smoothedTargetSpeedMultiplier * smoothedDistances[0];
+		//action.steering = this.getSwarmSteeringVectorized(sensors, smoothedDistances[1]);
+		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
+		action.brake = this.getSwarmBrake(sensors, targetSpeed);
+		action.steering = steering;
+		
 	}
 	
 	private void swarmControl(Action action, SensorModel sensors) {

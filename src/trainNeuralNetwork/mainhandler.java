@@ -20,7 +20,8 @@ public class mainhandler {
 	
 	public static void main(String args[]){
 //		trainDirectNetwork();
-		trainThreeNetworks();
+//		trainThreeNetworks();
+		trainTwoNetworks();
 //	    trainIndirectNetworks();
 //		trainNEATNetwork();
 	}
@@ -173,6 +174,57 @@ public class mainhandler {
 		serializeNN(AccelerateNN, "AccelerateNN.ser");
 		serializeNN(BreakNN, "BreakNN.ser");
 		serializeNN(SteeringNN, "SteeringNN.ser");
+	}
+	
+	private static void trainTwoNetworks(){
+		String validationcsv = "trainingdata/Spring-2.csv";
+		datahandler handler = new datahandler();
+		
+		List<List<List<Double>>> validationdataTargetSpeed = handler.readCSV(validationcsv,0, 19, 23, 1, false);
+		double[][] inputvalidationTargetSpeed = transformListsToArrays(validationdataTargetSpeed.get(0));
+		double[][] outputvalidationTargetSpeed = transformListsToArrays(validationdataTargetSpeed.get(1));
+		
+		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 0, 19, 22, 1, false);
+		double[][] inputvalidation = transformListsToArrays(validationdata.get(0));
+		double[][] outputvalidation = transformListsToArrays(validationdata.get(1));
+		
+		NeuralNetwork TargetSpeedNN = new NeuralNetwork(inputvalidationTargetSpeed, outputvalidationTargetSpeed, new ActivationLinear());
+		NeuralNetwork SteeringNN = new NeuralNetwork(inputvalidation, outputvalidation, new ActivationTANH());
+		
+		double[][] inputTargetSpeed;
+		double[][] outputTargetSpeed;
+		double[][] inputSteering;
+		double[][] outputSteering;
+		
+		int epoch = 0;
+		
+		File dir = new File("trainingdata/");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			while(epoch < 1){
+				for(File files : directoryListing){
+					List<List<List<Double>>> dataTargetSpeed = handler.readCSV(files.getAbsolutePath(),0, 19, 23, 1, false);
+					inputTargetSpeed = transformListsToArrays(dataTargetSpeed.get(0));
+					outputTargetSpeed = transformListsToArrays(dataTargetSpeed.get(1));
+
+					List<List<List<Double>>> dataSteering = handler.readCSV(files.getAbsolutePath(), 0, 19, 22, 1, false);
+					inputSteering = transformListsToArrays(dataSteering.get(0));
+					outputSteering = transformListsToArrays(dataSteering.get(1));
+					
+					System.out.println("AccelerateNN:");
+					TargetSpeedNN.trainInitializedNN(inputTargetSpeed, outputTargetSpeed, inputvalidationTargetSpeed, outputvalidationTargetSpeed);
+					System.out.println("SteeringNN:");
+					SteeringNN.trainInitializedNN(inputSteering, outputSteering, inputvalidation, outputvalidation);
+				}
+				epoch++;
+			}
+		} 
+		else if(!dir.isDirectory()){
+		    System.out.print("file path does not lead to a directory");
+		    
+		}
+		serializeNN(TargetSpeedNN, "TargetSpeedTwoNN.ser");
+		serializeNN(SteeringNN, "SteeringTwoNN.ser");
 	}
 	private static void trainIndirectNetworks() {
 		datahandler handler = new datahandler();

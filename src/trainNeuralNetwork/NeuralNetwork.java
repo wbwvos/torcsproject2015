@@ -74,7 +74,7 @@ public class NeuralNetwork implements Serializable {
 		// configure the neural networks
 		network = new BasicNetwork(); 
 		 
-		int hiddenLayerNeuronsCount = 10;
+		int hiddenLayerNeuronsCount = 50;
 		 
 		network.addLayer(new BasicLayer(null, true, inputdata[0].length));
 		network.addLayer(new BasicLayer(activation, true, hiddenLayerNeuronsCount));
@@ -287,7 +287,7 @@ public class NeuralNetwork implements Serializable {
 		//double[] input = transformInput(sensors);
 		
 		double[] input = transformInput2(sensors, useSpeed);
-			
+		//System.out.println(input.toString());
 		//double[] classifyDouble = {20.8291,0.551491,200.173,11.7288,21.0026,68.3699,0.360499,0.087496,0.0500069,0.0351949,0.0273127,0.0224547,0.0191879,0.0168629,0.0151433,0.0138375,0.0128289,0.0120427,0.0114294,0.0105954,0.0100575,0.0118036,-1.0,-1.0,-1.0,-1.0,-1.0,0.997989};
 		//,1.0,0.0,-0.9884749846419609
 		MLData classifyData = new BasicMLData(input);

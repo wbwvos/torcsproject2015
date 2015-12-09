@@ -17,11 +17,13 @@ public class DefaultDriverGenome implements IGenome {
     private NeuralNetwork steeringNN;
     private NeuralNetwork speedNN;
     private NeuralNetwork positionNN;
+    private NeuralNetwork targetSpeedNN;
     
     public DefaultDriverGenome() {
-    	this.accelerateNN = deserializeNN("AccelerateNN.ser");
-    	this.breakNN = deserializeNN("BreakNN.ser");
-    	this.steeringNN = deserializeNN("SteeringNN.ser");
+    	//this.accelerateNN = deserializeNN("AccelerateNN.ser");
+    	//this.breakNN = deserializeNN("BreakNN.ser");
+    	this.steeringNN = deserializeNN("SteeringTwoNN.ser");
+    	this.targetSpeedNN = deserializeNN("TargetSpeedTwoNN.ser");
     	//this.myNN = deserializeNN("SupaFlyNN.ser");
         //this.speedNN = deserializeNN("speedNN.ser");
         //this.positionNN = deserializeNN("positionNN.ser");
@@ -49,6 +51,10 @@ public class DefaultDriverGenome implements IGenome {
     
     public NeuralNetwork getPositionNN() {
     	return this.positionNN;
+    }
+    
+    public NeuralNetwork getTargetSpeed(){
+    	return this.targetSpeedNN;
     }
     
     //public NeuralNetwork getNeatNN() {
