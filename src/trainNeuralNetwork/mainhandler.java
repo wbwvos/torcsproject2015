@@ -8,7 +8,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
+import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationLinear;
+import org.encog.engine.network.activation.ActivationSigmoid;
+import org.encog.engine.network.activation.ActivationTANH;
 import org.encog.neural.networks.BasicNetwork;
 
 public class mainhandler {
@@ -16,7 +19,8 @@ public class mainhandler {
 	NeuralNetwork NN;
 	
 	public static void main(String args[]){
-		trainDirectNetwork();
+//		trainDirectNetwork();
+		trainThreeNetworks();
 //	    trainIndirectNetworks();
 //		trainNEATNetwork();
 	}
@@ -74,9 +78,9 @@ public class mainhandler {
 	}
 	
 	private static void trainDirectNetwork() {
-		String validationcsv = "data/Defaultdriver/Forza.csv";
+		String validationcsv = "trainingdata/Spring-2.csv";
 		datahandler handler = new datahandler();
-		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 28, 3, false);
+		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 0, 20, 20, 3, false);
 		double[][] inputvalidation = transformListsToArrays(validationdata.get(0));
 		double[][] outputvalidation = transformListsToArrays(validationdata.get(1));
 
@@ -87,12 +91,12 @@ public class mainhandler {
 		
 		int epoch = 0;
 		
-		File dir = new File("data/Defaultdriver/");
+		File dir = new File("trainingdata/");
 		File[] directoryListing = dir.listFiles();
 		if (directoryListing != null) {
 			while(epoch < 1){
 				for(File files : directoryListing){
-					List<List<List<Double>>> data = handler.readCSV(files.getAbsolutePath(), 28, 3, false);
+					List<List<List<Double>>> data = handler.readCSV(files.getAbsolutePath(), 0, 20, 20, 3, false);
 					input = transformListsToArrays(data.get(0));
 					output = transformListsToArrays(data.get(1));
 					NN.trainInitializedNN(input, output, inputvalidation, outputvalidation);
@@ -104,12 +108,75 @@ public class mainhandler {
 		    System.out.print("file path does not lead to a directory");
 		    
 		}
-		serializeNN(NN, "DefaultDriver3.ser");
+		serializeNN(NN, "SupaFlyNN.ser");
 	}
-
+	private static void trainThreeNetworks(){
+		String validationcsv = "trainingdata/Spring-2.csv";
+		datahandler handler = new datahandler();
+		
+		List<List<List<Double>>> validationdataAccelerate = handler.readCSV(validationcsv,0, 20, 20, 1, false);
+		double[][] inputvalidationAccelerate = transformListsToArrays(validationdataAccelerate.get(0));
+		double[][] outputvalidationAccelerate = transformListsToArrays(validationdataAccelerate.get(1));
+		
+		List<List<List<Double>>> validationdataSpeed = handler.readCSV(validationcsv,0, 20, 21, 1, false);
+		double[][] inputvalidationBreak = transformListsToArrays(validationdataSpeed.get(0));
+		double[][] outputvalidationBreak = transformListsToArrays(validationdataSpeed.get(1));
+		
+		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 0, 19, 22, 1, false);
+		double[][] inputvalidation = transformListsToArrays(validationdata.get(0));
+		double[][] outputvalidation = transformListsToArrays(validationdata.get(1));
+		
+		NeuralNetwork AccelerateNN = new NeuralNetwork(inputvalidationAccelerate, outputvalidationAccelerate, new ActivationSigmoid());
+		NeuralNetwork BreakNN = new NeuralNetwork(inputvalidationBreak, outputvalidationBreak, new ActivationSigmoid());
+		NeuralNetwork SteeringNN = new NeuralNetwork(inputvalidation, outputvalidation, new ActivationTANH());
+		
+		double[][] inputAccelerate;
+		double[][] outputAccelerate;
+		double[][] inputBreak;
+		double[][] outputBreak;
+		double[][] inputSteering;
+		double[][] outputSteering;
+		
+		int epoch = 0;
+		
+		File dir = new File("trainingdata/");
+		File[] directoryListing = dir.listFiles();
+		if (directoryListing != null) {
+			while(epoch < 1){
+				for(File files : directoryListing){
+					List<List<List<Double>>> dataAccelerate = handler.readCSV(files.getAbsolutePath(),0, 20, 20, 1, false);
+					inputAccelerate = transformListsToArrays(dataAccelerate.get(0));
+					outputAccelerate = transformListsToArrays(dataAccelerate.get(1));
+					
+					List<List<List<Double>>> dataBreak = handler.readCSV(files.getAbsolutePath(),0, 20, 21, 1, false);
+					inputBreak = transformListsToArrays(dataBreak.get(0));
+					outputBreak = transformListsToArrays(dataBreak.get(1));
+					
+					List<List<List<Double>>> dataSteering = handler.readCSV(files.getAbsolutePath(), 0, 19, 22, 1, false);
+					inputSteering = transformListsToArrays(dataSteering.get(0));
+					outputSteering = transformListsToArrays(dataSteering.get(1));
+					
+					System.out.println("AccelerateNN:");
+					AccelerateNN.trainInitializedNN(inputAccelerate, outputAccelerate, inputvalidationAccelerate, outputvalidationAccelerate);
+					System.out.println("BreakNN:");
+					BreakNN.trainInitializedNN(inputBreak, outputBreak, inputvalidationBreak, outputvalidationBreak);
+					System.out.println("SteeringNN:");
+					SteeringNN.trainInitializedNN(inputSteering, outputSteering, inputvalidation, outputvalidation);
+				}
+				epoch++;
+			}
+		} 
+		else if(!dir.isDirectory()){
+		    System.out.print("file path does not lead to a directory");
+		    
+		}
+		serializeNN(AccelerateNN, "AccelerateNN.ser");
+		serializeNN(BreakNN, "BreakNN.ser");
+		serializeNN(SteeringNN, "SteeringNN.ser");
+	}
 	private static void trainIndirectNetworks() {
 		datahandler handler = new datahandler();
-		List<List<List<Double>>> data = handler.readCSV("data/SimpleDriver/AalborgAlpine12Brondehachnew.csv", 28, 2, true);
+		List<List<List<Double>>> data = handler.readCSV("data/SimpleDriver/AalborgAlpine12Brondehachnew.csv", 0, 28, 28, 3, false);
 		double[][] inputs = transformListsToArrays(data.get(0));
 		double[][] outputs = transformListsToArrays(data.get(1));
 		double[][] transposedOutputs = new double[outputs[0].length][outputs.length];
@@ -141,7 +208,7 @@ public class mainhandler {
 	private static void trainNEATNetwork() {
 		String validationcsv = "data/Defaultdriver/Forza.csv";
 		datahandler handler = new datahandler();
-		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 28, 3, false);
+		List<List<List<Double>>> validationdata = handler.readCSV(validationcsv, 0, 28, 28, 3, false);
 		double[][] inputvalidation = transformListsToArrays(validationdata.get(0));
 		double[][] outputvalidation = transformListsToArrays(validationdata.get(1));
 
@@ -157,7 +224,7 @@ public class mainhandler {
 		if (directoryListing != null) {
 			while(epoch < 1){
 				for(File files : directoryListing){
-					List<List<List<Double>>> data = handler.readCSV(files.getAbsolutePath(), 28, 3, false);
+					List<List<List<Double>>> data = handler.readCSV(files.getAbsolutePath(), 0, 28, 28, 3, false);
 					input = transformListsToArrays(data.get(0));
 					output = transformListsToArrays(data.get(1));
 					NN.trainNEAT(input, output, inputvalidation, outputvalidation);

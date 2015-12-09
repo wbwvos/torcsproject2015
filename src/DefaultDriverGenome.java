@@ -12,12 +12,17 @@ public class DefaultDriverGenome implements IGenome {
     private static final long serialVersionUID = 6534186543165341653L;
     
     private NeuralNetwork myNN;
-    
+    private NeuralNetwork accelerateNN;
+    private NeuralNetwork breakNN;
+    private NeuralNetwork steeringNN;
     private NeuralNetwork speedNN;
     private NeuralNetwork positionNN;
     
     public DefaultDriverGenome() {
-    	//this.myNN = deserializeNN("DefaultDriver3.ser");
+    	this.accelerateNN = deserializeNN("AccelerateNN.ser");
+    	this.breakNN = deserializeNN("BreakNN.ser");
+    	this.steeringNN = deserializeNN("SteeringNN.ser");
+    	//this.myNN = deserializeNN("SupaFlyNN.ser");
         //this.speedNN = deserializeNN("speedNN.ser");
         //this.positionNN = deserializeNN("positionNN.ser");
     }
@@ -26,6 +31,16 @@ public class DefaultDriverGenome implements IGenome {
     
     public NeuralNetwork getMyNN() {
         return myNN;
+    }
+    
+    public NeuralNetwork getAccelerateNN() {
+        return accelerateNN;
+    }
+    public NeuralNetwork getBreakNN() {
+        return breakNN;
+    }
+    public NeuralNetwork getSteeringNN() {
+        return steeringNN;
     }
     
     public NeuralNetwork getSpeedNN() {

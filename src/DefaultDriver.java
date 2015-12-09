@@ -24,9 +24,12 @@ import trainNeuralNetwork.NeuralNetwork;
 
 public class DefaultDriver extends AbstractDriver {
 	
-//	trainingdatawriter datawriter = new trainingdatawriter("Self generated training data/trainingdata.csv");
+	trainingdatawriter datawriter = new trainingdatawriter("trainingdata/Spring.csv");
 
     private NeuralNetwork MyNN;
+    private NeuralNetwork AccelerateNN;
+    private NeuralNetwork BreakNN;
+    private NeuralNetwork SteeringNN;
     private NeuralNetwork speedNN;
     private NeuralNetwork positionNN;
     private NeuralNetwork NeatNN;
@@ -37,11 +40,12 @@ public class DefaultDriver extends AbstractDriver {
     
     @Override
     public void control(Action action, SensorModel sensors) {
-//    	this.directControl(action, sensors);
+    	this.directControl(action, sensors);
 //    	this.indirectControl(action, sensors);
 //    	this.NEATControl(action, sensors);
 //    	this.swarmControl(action, sensors);
-    	this.swarmControlVectorized(action, sensors);
+//    	this.swarmControlVectorized(action, sensors);
+    	
     }
     
     @Override
@@ -49,6 +53,9 @@ public class DefaultDriver extends AbstractDriver {
     	if (genome instanceof DefaultDriverGenome) {
     		DefaultDriverGenome MyGenome = (DefaultDriverGenome) genome;
     		MyNN = MyGenome.getMyNN();
+    		AccelerateNN = MyGenome.getAccelerateNN();
+    		BreakNN = MyGenome.getBreakNN();
+    		SteeringNN = MyGenome.getSteeringNN();
     		this.speedNN = MyGenome.getSpeedNN();
     		this.positionNN = MyGenome.getPositionNN();
     		this.evolutionaryValuesInit();
@@ -190,6 +197,16 @@ public class DefaultDriver extends AbstractDriver {
     	return MyNN.useNN(sensors);
     }
     
+    private double[] getValuesThreeNN(SensorModel sensors){  
+    	double[] outputvalues = new double[3];
+    	
+    	outputvalues[0] = AccelerateNN.useSeperateNN(sensors, true)[0];
+    	outputvalues[1] = BreakNN.useSeperateNN(sensors, true)[0];
+    	outputvalues[2] = SteeringNN.useSeperateNN(sensors, false)[0];
+    	
+    	return outputvalues;
+    }
+    
     private double[] getNEATValues(SensorModel sensors){     
     	return NeatNN.useNN(sensors);
     }
@@ -197,7 +214,7 @@ public class DefaultDriver extends AbstractDriver {
     private double id = Math.random();
     
     public String getDriverName() {
-        return "simple example: " + this.id;
+        return "superflAI: ";
     }
     
     
@@ -267,17 +284,18 @@ public class DefaultDriver extends AbstractDriver {
 	}
 	
 	private void directControl(Action action, SensorModel sensors) {
-		double[] values = getValues(sensors);
+		//double[] values = getValues(sensors);
+		double[] values = getValuesThreeNN(sensors);
 
-		boolean smooth = Math.abs(values[2]) < 0.15;
-    	action.accelerate = smooth && (0.4 > values[0]) ? 0.4 : values[0];
-    	action.brake = 0;
-    	action.steering = smooth ? 0 : values[2];
+		//boolean smooth = Math.abs(values[2]) < 0.15;
+    	action.accelerate = values[0];
+    	action.brake = values[1];
+    	action.steering = values[2];
     	
-    	System.out.print(action.accelerate + " ");
-//    	System.out.print(action.brake + " " );
-    	System.out.print(values[1] + " " );
-    	System.out.print(action.steering +"\n");
+    	//System.out.print(action.accelerate + " ");
+    	//System.out.print(action.brake + " " );
+    	//System.out.print(values[1] + " " );
+    	//System.out.print(action.steering +"\n");
 	}
 	
 	private void NEATControl(Action action, SensorModel sensors) {
@@ -323,7 +341,7 @@ public class DefaultDriver extends AbstractDriver {
 		//if(sensors.getRacePosition() == 1){
 		//	System.out.println(sensors.getDistanceFromStartLine());
 		//}
-		if(sensors.getRacePosition() == 1 && sensors.getLastLapTime() != 0.0){ //
+		if(sensors.getRacePosition() == 1 && sensors.getLastLapTime() != 0.0){ 
 			writeEvo(sensors);
 			action.abandonRace = true;
 		}
@@ -347,6 +365,7 @@ public class DefaultDriver extends AbstractDriver {
 		//System.out.print(action.accelerate + " ");
     	//System.out.print(action.brake + " " );
     	//System.out.print(action.steering +"\n");
+		
 	}
 	
 	private void swarmControlVectorized(Action action, SensorModel sensors) {
@@ -377,8 +396,8 @@ public class DefaultDriver extends AbstractDriver {
 //		System.out.print(action.accelerate + " ");
 //    	System.out.print(action.brake + " " );
 //    	System.out.print(action.steering +"\n");
+		datawriter.appendtoCsvFile(frontDistances, sensors.getSpeed(),action, targetSpeed);
 	}
-	
 	private double[] getFrontDistances(SensorModel sensors) {
 		double[] trackEdges = sensors.getTrackEdgeSensors();
 		double[] opponents = sensors.getOpponentSensors();

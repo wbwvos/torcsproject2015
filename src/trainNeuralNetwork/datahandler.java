@@ -13,15 +13,15 @@ public class datahandler {
 	private double[] mins;
 	private double[] maxes;
 	
-	public List<List<List<Double>>> readCSV(String csvFile, int inputsCount, int outputsCount, boolean normalizeInputs){
+	public List<List<List<Double>>> readCSV(String csvFile, int inputsStart, int inputsCount, int outputsStart, int outputsCount, boolean normalizeInputs){
 		BufferedReader br = null;
 		String line = "";
 		String separator = ",";
 		
 		List<List<Double>> input = new LinkedList<List<Double>>();
 		List<List<Double>> output = new LinkedList<List<Double>>();
-		this.mins = new double[inputsCount];
-		this.maxes = new double[inputsCount];
+		this.mins = new double[inputsCount+outputsCount];
+		this.maxes = new double[inputsCount+outputsCount];
 		
 		try {
 						br = new BufferedReader(new FileReader(csvFile));
@@ -33,21 +33,34 @@ public class datahandler {
 				List<Double> currentInput = new ArrayList<Double>(inputsCount);
 				List<Double> currentOutput = new ArrayList<Double>(outputsCount);
 
-				for(int i = 0; i < values.length; ++i){
-					if(i < inputsCount){
+				for(int i = inputsStart; i < inputsStart + inputsCount; ++i){
+					
 						double value = values[i].isEmpty() ? 0.0 : Double.parseDouble(values[i]);
 						currentInput.add(value);
-						if (this.mins[i] > value) {
-							this.mins[i] = value;
+						
+						if (this.mins[i-inputsStart] > value) {
+							this.mins[i-inputsStart] = value;
 						}
-						if (this.maxes[i] < value) {
-							this.maxes[i] = value;
+						if (this.maxes[i-inputsStart] < value) {
+							this.maxes[i-inputsStart] = value;
 						}
-					}
-					else{
-						currentOutput.add(Double.parseDouble(values[i]));
-					}
+					
 				}
+				for(int i = outputsStart; i < outputsStart + outputsCount; ++i){
+					
+						double value = values[i].isEmpty() ? 0.0 : Double.parseDouble(values[i]);
+						currentOutput.add(value);
+						
+						if (this.mins[i-outputsStart+inputsCount] > value) {
+							this.mins[i-outputsStart+inputsCount] = value;
+						}
+						if (this.maxes[i-outputsStart+inputsCount] < value) {
+							this.maxes[i-outputsStart+inputsCount] = value;
+						}
+					
+				}
+				
+				
 				input.add(currentInput);
 				output.add(currentOutput);
 			}
@@ -74,7 +87,7 @@ public class datahandler {
 			this.normalizeInputs(input, this.mins, this.maxes);
 		}
 		
-		System.out.println("Done");
+		//System.out.println("Done");
 		List<List<List<Double>>> data = new ArrayList<List<List<Double>>>(2);
 		data.add(input);
 		data.add(output);

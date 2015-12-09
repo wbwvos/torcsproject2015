@@ -64,14 +64,12 @@ public class DefaultDriverAlgorithm extends AbstractAlgorithm {
             if(DriversUtils.hasCheckpoint()){
                 DriversUtils.loadCheckpoint().run(true);
             } else {
-            	while(true){
+            	/*while(true){
             		algorithm.run();
-            	}
+            	}*/
             }
         } else {
-        	while(true){
-        		algorithm.run();
-        	}
+        	algorithm.run();
         }
     }
 
