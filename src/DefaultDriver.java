@@ -42,10 +42,10 @@ public class DefaultDriver extends AbstractDriver {
     @Override
     public void control(Action action, SensorModel sensors) {
 //    	this.directControl(action, sensors);
-//    	this.indirectControl(action, sensors);
+    	this.indirectControl(action, sensors); // THIS IS WHAT IT HAS TO USE TO COMBINE SWARM AND NEURAL NETWORK!!
 //    	this.NEATControl(action, sensors);
 //    	this.swarmControl(action, sensors);
-    	this.swarmControlVectorized(action, sensors);
+//    	this.swarmControlVectorized(action, sensors);
     	
     }
     
@@ -56,10 +56,10 @@ public class DefaultDriver extends AbstractDriver {
     		MyNN = MyGenome.getMyNN();
     		//AccelerateNN = MyGenome.getAccelerateNN();
     		//BreakNN = MyGenome.getBreakNN();
-    		//this.SteeringNN = MyGenome.getSteeringNN();
+    		this.SteeringNN = MyGenome.getSteeringNN();
     		//this.speedNN = MyGenome.getSpeedNN();
     		//this.positionNN = MyGenome.getPositionNN();
-    		//this.TargetSpeedNN = MyGenome.getTargetSpeed();
+    		this.TargetSpeedNN = MyGenome.getTargetSpeed();
     		this.evolutionaryValuesInit();
 //    		this.getBestEvo();
 //    		this.evolutionaryValuesGauss();
