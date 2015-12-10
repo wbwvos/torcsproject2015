@@ -9,11 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-
-import org.encog.neural.networks.BasicNetwork;
 
 import cicontest.algorithm.abstracts.AbstractDriver;
 import cicontest.torcs.client.Action;
@@ -24,16 +20,9 @@ import trainNeuralNetwork.NeuralNetwork;
 
 public class DefaultDriver extends AbstractDriver {
 	
-	trainingdatawriter datawriter = new trainingdatawriter("trainingdata/Spring.csv");
+//	trainingdatawriter datawriter = new trainingdatawriter("trainingdata/Spring.csv");
 
-    private NeuralNetwork MyNN;
-    private NeuralNetwork AccelerateNN;
-    private NeuralNetwork BreakNN;
     private NeuralNetwork SteeringNN;
-    private NeuralNetwork speedNN;
-    private NeuralNetwork positionNN;
-    private NeuralNetwork NeatNN;
-    private NeuralNetwork TargetSpeedNN;
     private double targetSpeed;
     private double targetPosition;
     public double[] evo = new double[10]; 
@@ -43,27 +32,17 @@ public class DefaultDriver extends AbstractDriver {
     public void control(Action action, SensorModel sensors) {
 //    	this.directControl(action, sensors);
     	this.indirectControl(action, sensors); // THIS IS WHAT IT HAS TO USE TO COMBINE SWARM AND NEURAL NETWORK!!
-//    	this.NEATControl(action, sensors);
-//    	this.swarmControl(action, sensors);
 //    	this.swarmControlVectorized(action, sensors);
-    	
     }
     
     @Override
 	public void loadGenome(IGenome genome) {
     	if (genome instanceof DefaultDriverGenome) {
     		DefaultDriverGenome MyGenome = (DefaultDriverGenome) genome;
-    		MyNN = MyGenome.getMyNN();
-    		//AccelerateNN = MyGenome.getAccelerateNN();
-    		//BreakNN = MyGenome.getBreakNN();
-    		this.SteeringNN = MyGenome.getSteeringNN();
-    		//this.speedNN = MyGenome.getSpeedNN();
-    		//this.positionNN = MyGenome.getPositionNN();
-    		this.TargetSpeedNN = MyGenome.getTargetSpeed();
+    		this.SteeringNN = MyGenome.getMyNN();
     		this.evolutionaryValuesInit();
 //    		this.getBestEvo();
 //    		this.evolutionaryValuesGauss();
-    		//this.NeatNN = MyGenome.getNeatNN();
     	} else {
     		System.err.println("Invalid Genome assigned");
     	}
@@ -77,8 +56,6 @@ public class DefaultDriver extends AbstractDriver {
     	System.out.print("SIGMA: " + weight);
     	return value * ((random/weight) + 1);
     }
-
-    
     
     public double[] evolutionaryValuesInit(){
 //    	System.out.println("EVINIT");
@@ -110,7 +87,7 @@ public class DefaultDriver extends AbstractDriver {
     	evo[0] = Math.max(2, Math.min(3, randomGaussian(evo[0]))); //targetSpeedMultiplier
     	evo[1] = Math.max(2, Math.min(4, randomGaussian(evo[1]))); //smoothedTargetSpeedMultiplier
     	evo[2] = Math.max(1, Math.min(4, randomGaussian(evo[2]))); //opponentSensorMultiplier
-//    	evo[3] = Math.round(Math.max(1, Math.min(9, randomGaussian(evo[3])))); //smootedWindowsSize
+    	evo[3] = Math.round(Math.max(1, Math.min(9, randomGaussian(evo[3])))); //smootedWindowsSize
     	evo[4] = Math.round(Math.max(1, Math.min(50, randomGaussian(evo[4])))); //accelerationDiff
     	evo[5] = Math.round(Math.max(1, Math.min(100, randomGaussian(evo[5])))); //brakeDiffOrig
     	evo[6] = Math.round(Math.max(1, Math.min(10, randomGaussian(evo[6])))); //brakeDiffMultiplier
@@ -194,38 +171,10 @@ public class DefaultDriver extends AbstractDriver {
     	System.out.println("combiSteeringNormalWeight: " + evo[8]);
     	System.out.println("CombiSteeringSmoothedWeight: " + evo[9]);
     }
-
-    private double[] getValues(SensorModel sensors){     
-    	return MyNN.useNN(sensors);
-    }
     
-    private double[] getValuesThreeNN(SensorModel sensors){  
-    	double[] outputvalues = new double[3];
-    	
-    	outputvalues[0] = AccelerateNN.useSeperateNN(sensors, true)[0];
-    	outputvalues[1] = BreakNN.useSeperateNN(sensors, true)[0];
-    	outputvalues[2] = SteeringNN.useSeperateNN(sensors, false)[0];
-    	
-    	return outputvalues;
-    }
-    
-    private double[] getValuesTwoNN(SensorModel sensors){
-    	double[] outputvalues = new double[2];
-
-    	outputvalues[0] = TargetSpeedNN.useSeperateNN(sensors, false)[0];
-    	outputvalues[1] = SteeringNN.useSeperateNN(sensors, false)[0];
-    	
-    	return outputvalues;
-    }
-    
-    private double[] getNEATValues(SensorModel sensors){     
-    	return NeatNN.useNN(sensors);
-    }
-
     public String getDriverName() {
-        return "SupaflAI";
+        return "SupaflAIN";
     }
-    
     
     public void controlQualification(Action action, SensorModel sensors) {
         action.clutch = 1;
@@ -292,41 +241,23 @@ public class DefaultDriver extends AbstractDriver {
 		return steering;
 	}
 	
-	private void directControl(Action action, SensorModel sensors) {
-		//double[] values = getValues(sensors);
-		double[] values = getValuesThreeNN(sensors);
-
-		//boolean smooth = Math.abs(values[2]) < 0.15;
-    	action.accelerate = values[0];
-    	action.brake = values[1];
-    	action.steering = values[2];
-    	
-    	//System.out.print(action.accelerate + " ");
-    	//System.out.print(action.brake + " " );
-    	//System.out.print(values[1] + " " );
-    	//System.out.print(action.steering +"\n");
-	}
-	
-	private void NEATControl(Action action, SensorModel sensors) {
-		double[] values = getNEATValues(sensors);
-
-    	if(values[1] > values[0]){
-			action.accelerate = values[0];
-    	}else{
-        	action.brake = values[1];
-		}
-    	action.steering = values[2];
-    	System.out.print(action.accelerate + " ");
-    	System.out.print(action.brake + " " );
-    	System.out.print(action.steering +"\n");
-	}
+//	private void directControl(Action action, SensorModel sensors) {
+//		//double[] values = getValues(sensors);
+//		
+//		double[] values = getValuesThreeNN(sensors);
+//
+//		//boolean smooth = Math.abs(values[2]) < 0.15;
+//    	action.accelerate = values[0];
+//    	action.brake = values[1];
+//    	action.steering = values[2];
+//    	
+//    	//System.out.print(action.accelerate + " ");
+//    	//System.out.print(action.brake + " " );
+//    	//System.out.print(values[1] + " " );
+//    	//System.out.print(action.steering +"\n");
+//	}
 	
 	private void indirectControl(Action action, SensorModel sensors) {
-		double[] values = getValuesTwoNN(sensors);
-		//this.targetSpeed = Math.abs(this.speedNN.predict(sensors));
-		//double targetSpeed = values[0];
-		double steering = values[1];
-		
 		double[] frontDistances = this.getFrontDistances(sensors);
 		if (frontDistances[0] < 0) {
 			double trackPos = sensors.getTrackPosition();
@@ -335,6 +266,7 @@ public class DefaultDriver extends AbstractDriver {
 			action.steering = - Math.signum(trackPos);
 			return;
 		}
+		
 		int bestAngle = this.argmax(frontDistances);
 		double smoothedTargetSpeedMultiplier = evo[1];
 		double[] smoothedDistances = this.smooth(frontDistances, bestAngle);
@@ -342,39 +274,7 @@ public class DefaultDriver extends AbstractDriver {
 		//action.steering = this.getSwarmSteeringVectorized(sensors, smoothedDistances[1]);
 		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
 		action.brake = this.getSwarmBrake(sensors, targetSpeed);
-		action.steering = steering;
-		
-	}
-	
-	private void swarmControl(Action action, SensorModel sensors) {
-		//System.out.println(sensors.getRacePosition() + ": "+sensors.getLastLapTime());
-		//if(sensors.getRacePosition() == 1){
-		//	System.out.println(sensors.getDistanceFromStartLine());
-		//}
-		if(sensors.getRacePosition() == 1 && sensors.getLastLapTime() != 0.0){ 
-			writeEvo(sensors);
-			action.abandonRace = true;
-		}
-		if(sensors.getDamage() > 0){
-			writeEvo(sensors);
-			action.abandonRace = true;
-		}
-		double[] frontDistances = this.getFrontDistances(sensors);
-		double targetSpeedMultiplier = evo[0];
-		double targetSpeed = targetSpeedMultiplier*this.max(frontDistances); //possible optimization
-		if (targetSpeed < 0) {
-			double trackPos = sensors.getTrackPosition();
-			action.accelerate = 1;
-			action.brake = 0;
-			action.steering = - Math.signum(trackPos);
-			return;
-		}
-		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
-		action.brake = this.getSwarmBrake(sensors, targetSpeed);
-		action.steering = this.getSwarmSteering(sensors, frontDistances);
-		//System.out.print(action.accelerate + " ");
-    	//System.out.print(action.brake + " " );
-    	//System.out.print(action.steering +"\n");
+		action.steering = this.SteeringNN.predict(frontDistances);
 		
 	}
 	
@@ -406,8 +306,9 @@ public class DefaultDriver extends AbstractDriver {
 //		System.out.print(action.accelerate + " ");
 //    	System.out.print(action.brake + " " );
 //    	System.out.print(action.steering +"\n");
-		datawriter.appendtoCsvFile(frontDistances, sensors.getSpeed(),action, targetSpeed);
+//		datawriter.appendtoCsvFile(frontDistances, sensors.getSpeed(),action, targetSpeed);
 	}
+	
 	private double[] getFrontDistances(SensorModel sensors) {
 		double[] trackEdges = sensors.getTrackEdgeSensors();
 		double[] opponents = sensors.getOpponentSensors();
@@ -420,8 +321,7 @@ public class DefaultDriver extends AbstractDriver {
 //		this.printArray(dists);
 		return dists;
 	}
- 
-	
+ 	
 	private double[] smooth(double[] dists, int best) {
 		double windowSize = evo[3];
 		int window = (int) windowSize; // optimize
@@ -452,7 +352,7 @@ public class DefaultDriver extends AbstractDriver {
 			double magnitude = Math.sqrt(smoothedX[i] * smoothedX[i] + smoothedY[i] * smoothedY[i]);
 			if (bestMagnitude < magnitude) {
 				bestMagnitude = magnitude;
-				sine = smoothedX[i] / magnitude; // Math.floor(10 *  (smoothedX[i] / magnitude)) / (double) 10; // 
+				sine = smoothedX[i] / magnitude; 
 			}
 		}
 		double[] result = {bestMagnitude, sine};
@@ -477,62 +377,19 @@ public class DefaultDriver extends AbstractDriver {
 	private double getSwarmBrake(SensorModel sensors, double tSpeed) {
 		double curSpeed = sensors.getSpeed();
 		double speedDiff = tSpeed - curSpeed;
-		double brakeDiffOrig = evo[5];
-		//double brakeDiffMultiplier = evo[6];
-		double brakeDiff = brakeDiffOrig; //possible optimization
-//		if (curSpeed > 150){
-//			brakeDiff = brakeDiffOrig * 0.75;
-//		}
-//		if(curSpeed > 200){
-//			brakeDiff = brakeDiffOrig * 0.25;
-//		}
-//		if(curSpeed > 225){
-//			brakeDiff = brakeDiffOrig * 0.15;
-//		}
-//		if(curSpeed > 250){
-//			brakeDiff = 1;
-//		}
+		double brakeDiff = evo[5];
 		//System.out.println("BRAKEDIFF:" + brakeDiff);
 		if (speedDiff > 0) {
 			return 0;
 		} else if (speedDiff < - brakeDiff) {
 			return 1;
 		} else {
-			return Math.min(1, Math.abs(speedDiff / brakeDiffOrig)); //possible optimization (was 200)(brakeDiff * brakeDiffMultiplier)
+			return Math.min(1, Math.abs(speedDiff / brakeDiff)); //possible optimization (was 200)(brakeDiff * brakeDiffMultiplier)
 		}
-	}
-	
-	private double getSwarmSteering(SensorModel sensors, double[] dists) {
-		int maxDir = this.argmax(dists);
-		double weightedDir = this.getWeightedDir(dists);
-		//System.out.println(maxDir);
-		//System.out.println(weightedDir);
-		double maxAngle = (double) (maxDir - 9) / (double) 10;
-		double maxAngleWeighted = (double) (weightedDir - 9) / (double) 10;
-		//return (maxAngle + maxAngle +  maxAngleWeighted)/3;
-		if(maxAngle <= evo[7] && maxAngle >= - evo[7]){
-			//System.out.println("maxAngleWeighted activated");
-			return maxAngleWeighted;
-		}else{
-			//System.out.println("maxAngle activated");
-			return (evo[8]*maxAngle +  evo[9]*maxAngleWeighted)/(evo[8] + evo[9]); //Weighted
-		}
-
-		//return maxAngle;
 	}
 	
 	private double getSwarmSteeringVectorized(SensorModel sensors, double cosine) {
 		return cosine;
-	}
-	
-	private double max(double[] dists) {
-		double max = Double.NEGATIVE_INFINITY;
-		for (double dist : dists) {
-			if (max < dist) {
-				max = dist;
-			}
-		}
-		return max;
 	}
 	
 	private int argmax(double[] dists) {
@@ -545,18 +402,6 @@ public class DefaultDriver extends AbstractDriver {
 			}
 		}
 		return arg;
-	}
-	
-	private double getWeightedDir(double[] dists){
-		double totalWeight = 0.0;
-		double totalFreq = 0.0;
-		for(int i = 0; i < dists.length ; i++){
-			totalFreq = totalFreq + dists[i];
-			totalWeight = totalWeight + (double) (i) * dists[i];
-		}
-		double weightedDir = totalWeight/totalFreq;
-		//System.out.print(weightedDir);
-		return weightedDir;
 	}
 	
 	private void printArray(double[] array) {

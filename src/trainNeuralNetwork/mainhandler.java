@@ -8,7 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
-import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationLinear;
 import org.encog.engine.network.activation.ActivationSigmoid;
 import org.encog.engine.network.activation.ActivationTANH;
@@ -111,6 +110,7 @@ public class mainhandler {
 		}
 		serializeNN(NN, "SupaFlyNN.ser");
 	}
+	
 	private static void trainThreeNetworks(){
 		String validationcsv = "trainingdata/Spring-2.csv";
 		datahandler handler = new datahandler();

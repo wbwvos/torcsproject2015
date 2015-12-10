@@ -1,13 +1,9 @@
 package trainNeuralNetwork;
 
-import cicontest.torcs.client.SensorModel;
-
 import java.io.Serializable;
-import java.util.List;
 
 import org.encog.*;
 import org.encog.engine.network.activation.ActivationFunction;
-import org.encog.engine.network.activation.ActivationTANH;
 import org.encog.ml.CalculateScore;
 import org.encog.ml.data.MLData;
 import org.encog.ml.data.MLDataSet;
@@ -22,7 +18,6 @@ import org.encog.neural.networks.layers.BasicLayer;
 import org.encog.neural.networks.training.TrainingSetScore;
 import org.encog.neural.networks.training.propagation.Propagation;
 import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
-import org.encog.util.simple.EncogUtility;
 
 
 public class NeuralNetwork implements Serializable {
@@ -74,7 +69,7 @@ public class NeuralNetwork implements Serializable {
 		// configure the neural networks
 		network = new BasicNetwork(); 
 		 
-		int hiddenLayerNeuronsCount = 50;
+		int hiddenLayerNeuronsCount = 10;
 		 
 		network.addLayer(new BasicLayer(null, true, inputdata[0].length));
 		network.addLayer(new BasicLayer(activation, true, hiddenLayerNeuronsCount));
@@ -82,34 +77,6 @@ public class NeuralNetwork implements Serializable {
 		 
 		network.getStructure().finalizeStructure();
 		network.reset();
-		 
-		// train the neural network
-		 
-		//final Propagation train = new ResilientPropagation(network, trainingSet);
-		 
-		//int epochsCount = 200;
-		 
-		//for(int epoch = 1; epoch <= epochsCount; epoch++){
-		//	train.iteration();
-		//	System.out.print(epoch + ": " + network.calculateError(validationSet) + "\n");
-		//}
-		 
-		//train.finishTraining();
-		 
-		// calculate error on validation set
-		 
-		//double error = network.calculateError(validationSet);
-		
-		//System.out.print("Error:" + error);
-		//double[] classifyDouble = {20.8291,0.551491,200.173,11.7288,21.0026,68.3699,0.360499,0.087496,0.0500069,0.0351949,0.0273127,0.0224547,0.0191879,0.0168629,0.0151433,0.0138375,0.0128289,0.0120427,0.0114294,0.0105954,0.0100575,0.0118036,-1.0,-1.0,-1.0,-1.0,-1.0,0.997989};
-		//,1.0,0.0,-0.9884749846419609
-		//MLData classifyData = new BasicMLData(classifyDouble);
-		//MLData classified = network.compute(classifyData);
-		//System.out.println("OUTPUT:" + classified);
-		 
-		//Encog.getInstance().shutdown();
-		
-		//writeObject(network);
 	}
 	
 	public void train(double[][] inputs, double[][] outputs){ 
@@ -269,93 +236,13 @@ public class NeuralNetwork implements Serializable {
 		values[2] = 0.0; 
 		return values;
 	}
-
-	public double[] useNN(SensorModel sensors){
-		//double[] input = transformInput(sensors);
-		double[] input = transformInput2(sensors, true);
-		//double[] classifyDouble = {20.8291,0.551491,200.173,11.7288,21.0026,68.3699,0.360499,0.087496,0.0500069,0.0351949,0.0273127,0.0224547,0.0191879,0.0168629,0.0151433,0.0138375,0.0128289,0.0120427,0.0114294,0.0105954,0.0100575,0.0118036,-1.0,-1.0,-1.0,-1.0,-1.0,0.997989};
-		//,1.0,0.0,-0.9884749846419609
-		MLData classifyData = new BasicMLData(input);
-		MLData classified = network.compute(classifyData);
-		//System.out.println("OUTPUT:" + classified);
-		Encog.getInstance().shutdown();
-		
-		return classified.getData();
-	}
 	
-	public double[] useSeperateNN(SensorModel sensors, boolean useSpeed){
-		//double[] input = transformInput(sensors);
-		
-		double[] input = transformInput2(sensors, useSpeed);
-		//System.out.println(input.toString());
-		//double[] classifyDouble = {20.8291,0.551491,200.173,11.7288,21.0026,68.3699,0.360499,0.087496,0.0500069,0.0351949,0.0273127,0.0224547,0.0191879,0.0168629,0.0151433,0.0138375,0.0128289,0.0120427,0.0114294,0.0105954,0.0100575,0.0118036,-1.0,-1.0,-1.0,-1.0,-1.0,0.997989};
-		//,1.0,0.0,-0.9884749846419609
-		MLData classifyData = new BasicMLData(input);
-		MLData classified = network.compute(classifyData);
-		//System.out.println("OUTPUT:" + classified);
-		Encog.getInstance().shutdown();
-		
-		return classified.getData();
-	}
-	
-	public double predict(SensorModel sensors) {
-		double[] input = transformInput(sensors);
-		//ignore speed
-		input[0] = 0;
-		datahandler.normalize(input, this.mins, this.maxes);
+	public double predict(double[] input) {
+//		datahandler.normalize(inputs, this.mins, this.maxes);
 		MLData data = new BasicMLData(input);
 		MLData output = network.compute(data);
 		Encog.getInstance().shutdown();
 		
 		return output.getData(0);
-	}
-	
-	private double[] transformInput(SensorModel sensors){
-		double[] out = new double[28];
-		int index = -1;
-		out[++index] = sensors.getSpeed();
-		out[++index] = sensors.getAngleToTrackAxis();
-		out[++index] = sensors.getDistanceFromStartLine();
-		double[] TrackEdgeSensors = sensors.getTrackEdgeSensors();
-		for (double sensor : TrackEdgeSensors){
-			out[++index] = sensor;
-		}
-		double[] FocusSensors = sensors.getFocusSensors();
-		for (double Edgesensor : FocusSensors){
-			out[++index] = Edgesensor;
-		}
-		out[++index] = sensors.getTrackPosition();
-		
-		
-		return out;
-	}
-	
-	private double[] transformInput2(SensorModel sensors, boolean useSpeed){
-		//List<Double> inputs = new LinkedList<Double>();
-		//inputs.add(shit);
-		double[] out = null;
-		
-		if(useSpeed){
-			out = new double[20];
-		}
-		else{
-			out = new double[19];
-		}
-		int index = -1;
-		
-		double[] trackEdges = sensors.getTrackEdgeSensors();
-		double[] opponents = sensors.getOpponentSensors();
-		int firstOpponent = 9;
-		double opponentSensorMultiplier = 2;
-		double[] dists = new double[trackEdges.length];
-		for (int i = 0; i < trackEdges.length; ++i) {
-			out[++index] = Math.min(trackEdges[i], opponents[firstOpponent + i]*opponentSensorMultiplier); // optimize
-		}
-		if(useSpeed){
-			out[++index]= sensors.getSpeed();
-		}
-		
-		//return inputs.toArray(new double[0]);
-		return out;
 	}
 }
