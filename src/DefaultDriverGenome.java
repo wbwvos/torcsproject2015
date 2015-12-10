@@ -29,12 +29,20 @@ public class DefaultDriverGenome implements IGenome {
     
     public NeuralNetwork deserializeNN(String network){
     	try{
-    		InputStream fileIn = DefaultDriverAlgorithm.class.getResourceAsStream("memory/" + network);
+    		InputStream fileIn = null;
+    		try {
+    			fileIn = new FileInputStream("memory/" + network);
+    		} catch (Exception e) {
+    			fileIn = DefaultDriverAlgorithm.class.getResourceAsStream("memory/" + network);
+    		}
+//    		InputStream fileIn = DefaultDriverAlgorithm.class.getResourceAsStream("memory/" + network);
 //    		FileInputStream fileIn = new FileInputStream("memory/" + network);
     		ObjectInputStream in = new ObjectInputStream(fileIn);
     		NeuralNetwork neuralnetwork = (NeuralNetwork) in.readObject();
     		in.close();
-    		fileIn.close();
+    		if (fileIn != null) {
+    			fileIn.close();
+    		}
 //    		System.out.println("Deserialized Neuralnetwork");
     		return neuralnetwork;
     	}
