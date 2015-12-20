@@ -241,21 +241,32 @@ public class DefaultDriver extends AbstractDriver {
 		return steering;
 	}
 	
-//	private void directControl(Action action, SensorModel sensors) {
-//		//double[] values = getValues(sensors);
-//		
-//		double[] values = getValuesThreeNN(sensors);
-//
-//		//boolean smooth = Math.abs(values[2]) < 0.15;
-//    	action.accelerate = values[0];
-//    	action.brake = values[1];
-//    	action.steering = values[2];
-//    	
-//    	//System.out.print(action.accelerate + " ");
-//    	//System.out.print(action.brake + " " );
-//    	//System.out.print(values[1] + " " );
-//    	//System.out.print(action.steering +"\n");
-//	}
+	private void directControl(Action action, SensorModel sensors) {
+		double[] frontDistances = this.getFrontDistances(sensors);
+		if (frontDistances[0] < 0) {
+			double trackPos = sensors.getTrackPosition();
+			action.accelerate = 1;
+			action.brake = 0;
+			action.steering = - Math.signum(trackPos);
+			return;
+		}
+		double[] inputs = new double[frontDistances.length + 1];
+		for (int i = 0; i < frontDistances.length; ++i) {
+			inputs[i] = frontDistances[i];
+		}
+		inputs[inputs.length-1] = sensors.getSpeed();
+		double[] values = this.SteeringNN.predict(inputs);
+
+		//boolean smooth = Math.abs(values[2]) < 0.15;
+    	action.accelerate = values[0];
+    	action.brake = values[1];
+    	action.steering = values[2];
+    	
+    	//System.out.print(action.accelerate + " ");
+    	//System.out.print(action.brake + " " );
+    	//System.out.print(values[1] + " " );
+    	//System.out.print(action.steering +"\n");
+	}
 	
 	private void indirectControl(Action action, SensorModel sensors) {
 		double[] frontDistances = this.getFrontDistances(sensors);
@@ -274,7 +285,7 @@ public class DefaultDriver extends AbstractDriver {
 		//action.steering = this.getSwarmSteeringVectorized(sensors, smoothedDistances[1]);
 		action.accelerate = this.getSwarmAcceleration(sensors, targetSpeed);
 		action.brake = this.getSwarmBrake(sensors, targetSpeed);
-		action.steering = this.SteeringNN.predict(frontDistances);
+		action.steering = this.SteeringNN.predict(frontDistances)[0];
 		
 	}
 	

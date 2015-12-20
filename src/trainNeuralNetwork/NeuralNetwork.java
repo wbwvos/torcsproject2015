@@ -49,6 +49,10 @@ public class NeuralNetwork implements Serializable {
 		network = SerializedNetwork;
 	}
 	
+	public String dumpWeights() {
+		return this.network.dumpWeights();
+	}
+	
 	public void setActivation(ActivationFunction activation) {
 		this.activation = activation;
 	}
@@ -237,12 +241,13 @@ public class NeuralNetwork implements Serializable {
 		return values;
 	}
 	
-	public double predict(double[] input) {
+	public double[] predict(double[] input) {
 //		datahandler.normalize(inputs, this.mins, this.maxes);
 		MLData data = new BasicMLData(input);
 		MLData output = network.compute(data);
 		Encog.getInstance().shutdown();
 		
-		return output.getData(0);
+//		return output.getData(0);
+		return output.getData();
 	}
 }

@@ -21,6 +21,7 @@ public class DefaultDriverGenome implements IGenome {
     
     public DefaultDriverGenome() {
     	this.myNN = deserializeNN("SteeringTwoNN.mem");
+//    	this.myNN = deserializeNN("SupaFlyNN.ser");
     }
     
     public NeuralNetwork getMyNN() {
@@ -44,6 +45,7 @@ public class DefaultDriverGenome implements IGenome {
     			fileIn.close();
     		}
 //    		System.out.println("Deserialized Neuralnetwork");
+//    		System.out.println(neuralnetwork.dumpWeights());
     		return neuralnetwork;
     	}
     	catch(IOException i){
