@@ -9,6 +9,7 @@ public class NNPopulation {
 	private List<Species> species;
 	private int populationSize;
 	
+	//TODO still not used. Quite important for the whole thing to eventually work
 	private static long innovationNumber = 0;
 	private static final double sameSpeciesThreshold = 3.0;
 	
